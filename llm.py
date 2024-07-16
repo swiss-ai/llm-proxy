@@ -11,7 +11,6 @@ import litellm
 import os
 import litellm.exceptions
 from litellm.caching import Cache
-
 # litellm.cache = Cache( # optional if you want to use cache
 #     type="redis",
 #     host=getenv("REDISHOST", ""),
@@ -26,7 +25,6 @@ API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/ll
 def _update_costs_thread(budget_manager: litellm.BudgetManager):
     thread = threading.Thread(target=budget_manager.save_data)
     thread.start()
-
 class RetryConstantError(Exception):
     pass
 
@@ -77,6 +75,8 @@ def completion(**kwargs) -> litellm.ModelResponse:
     budget_manager: litellm.BudgetManager = kwargs.pop("budget_manager")
     kwargs['api_base'] = API_BASE
     kwargs['custom_llm_provider'] = "openai"
+    kwargs['input_cost_per_token'] = 0.005
+    kwargs['output_cost_per_token'] = 1
     def _completion():
         try:
             default_model = os.getenv("DEFAULT_MODEL", None)
@@ -96,13 +96,10 @@ def completion(**kwargs) -> litellm.ModelResponse:
                     )
                 response = litellm.completion(**kwargs)
             if "stream" not in kwargs or kwargs["stream"] is not True:
-                print(f"user_key: {user_key}")
-                print(f"master_key: {master_key}")
                 if user_key != master_key: # no budget on master key
                     # updates both user
                     budget_manager.update_cost(completion_obj=response, user=user_key)
                     _update_costs_thread(budget_manager)  # Non-blocking
-
             return response
         except Exception as e:
             print(f"LiteLLM Server: Got exception {e}")

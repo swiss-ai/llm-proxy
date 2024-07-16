@@ -1,24 +1,24 @@
 import os 
+import json
 import secrets
 import traceback
-import requests
+import time
 import litellm.proxy
 import litellm.proxy.proxy_server
 import llm as llm
 from utils import getenv, set_env_variables
-import json, time
-
 import litellm
 from litellm import BudgetManager
+from fastapi import FastAPI, Request, status, HTTPException, Depends
+from fastapi.responses import StreamingResponse
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.cors import CORSMiddleware
+
 litellm.max_budget = 1000 
 
 budget_manager = BudgetManager(project_name=os.getenv("PROJECT_NAME", "research-computer"), client_type="local")
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
 litellm.success_callback = ["helicone"]
-from fastapi import FastAPI, Request, status, HTTPException, Depends
-from fastapi.responses import StreamingResponse
-from fastapi.security import OAuth2PasswordBearer
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -29,7 +29,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-litellm-master-key")
+master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-xzyao")
 user_api_keys = set(budget_manager.get_users())
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -57,12 +57,11 @@ def key_auth(api_key: str = Depends(oauth2_scheme)):
         )
 
 ######## CHAT COMPLETIONS ################
-
 # for streaming
 def data_generator(response):
     for chunk in response:
-        # print(f"chunk: {chunk}")
-        yield f"data: {json.dumps(chunk)}\n\n"
+        print(f"chunk: {chunk}")
+        yield f"data: {json.dumps(chunk.to_dict())}\n\n"
 
 # for completion
 @app.post("/chat/completions", dependencies=[Depends(user_api_key_auth)])
@@ -125,7 +124,7 @@ async def generate_key(request: Request):
 
     total_budget = data["total_budget"]
 
-    api_key = f"sk-litellm-{secrets.token_urlsafe(16)}"
+    api_key = f"sk-rc-{secrets.token_urlsafe(16)}"
 
     try:
         budget_manager.create_budget(
