@@ -60,7 +60,6 @@ def key_auth(api_key: str = Depends(oauth2_scheme)):
 # for streaming
 def data_generator(response):
     for chunk in response:
-        print(f"chunk: {chunk}")
         yield f"data: {json.dumps(chunk.to_dict())}\n\n"
 
 # for completion
@@ -68,7 +67,6 @@ def data_generator(response):
 async def completion(request: Request):
     key = request.headers.get("Authorization").replace("Bearer ", "")  # type: ignore
     data = await request.json()
-    print(f"received request data: {data}")
     data["user_key"] = key
     data["budget_manager"] = budget_manager
     data["master_key"] = master_key
