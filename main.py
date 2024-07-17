@@ -120,12 +120,6 @@ async def health():
 
 ######## KEY MANAGEMENT ################
 
-@app.get("/key/cost", dependencies=[Depends(user_api_key_auth)])
-async def report_current(request: Request):
-    key = request.headers.get("Authorization").replace("Bearer ", "")  # type: ignore
-    return budget_manager.get_model_cost(key)
-
-
 @app.post("/key/new", dependencies=[Depends(key_auth)])
 async def generate_key(request: Request):
     try:
