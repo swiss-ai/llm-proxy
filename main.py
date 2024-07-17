@@ -1,26 +1,26 @@
 import os 
 import json
+import time
+import uuid
 import secrets
 import traceback
-import time
-import litellm.proxy
-import litellm.proxy.proxy_server
-import llm as llm
-from utils import getenv, set_env_variables
-import litellm
-from litellm import BudgetManager
+from langfuse import Langfuse
+from sqlmodel import create_engine, Session, select
 from fastapi import FastAPI, Request, status, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 
-litellm.max_budget = 1000 
+import llm as llm
+from utils import getenv, set_env_variables
+from user_utils import APIKey
 
-budget_manager = BudgetManager(project_name=os.getenv("PROJECT_NAME", "research-computer"), client_type="local")
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
-litellm.success_callback = ["helicone"]
+master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-xzyao")
+PG_HOST = os.environ.get("PG_HOST", "sqlite:///./test.db")
 
 app = FastAPI()
+engine = create_engine(PG_HOST)
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,24 +29,33 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-xzyao")
-user_api_keys = set(budget_manager.get_users())
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
+langfuse = Langfuse(
+    secret_key=os.environ.get("LANGFUSE_SECRET_KEY"),
+    public_key=os.environ.get("LANGFUSE_PUBLIC_KEY"),
+    host=os.environ.get("LANGFUSE_HOST"),
+)
 os.environ['OPENAI_API_KEY'] = "YOUR_API_KEY"
 
+def update_usage(generation):
+    generation.update({
+        "usage": {
+            "promptTokens": 1,
+            "completionTokens": 1,
+        }
+    })
 ######## AUTH UTILITIES ################
 
 def user_api_key_auth(api_key: str = Depends(oauth2_scheme)):
     if api_key == master_key:
         return
-    if api_key not in user_api_keys:
+    with Session(engine) as session:
+        api_keys = session.exec(select(APIKey).where(APIKey.key == api_key)).all()
+    if len(api_keys) == 0:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": "invalid user key"},
-            # TODO: this will be {'detail': {'error': 'something'}}
         )
-
 
 def key_auth(api_key: str = Depends(oauth2_scheme)):
     if api_key != master_key:
@@ -58,34 +67,39 @@ def key_auth(api_key: str = Depends(oauth2_scheme)):
 
 ######## CHAT COMPLETIONS ################
 # for streaming
-def data_generator(response):
+def data_generator(response, generation):
     for chunk in response:
-        yield f"data: {json.dumps(chunk.to_dict())}\n\n"
+        data = chunk.to_dict()
+        if data.get("usage", None) is not None:
+            generation.update(usage={
+                "promptTokens": data["usage"]["prompt_tokens"],
+                "completionTokens": data["usage"]["completion_tokens"],
+            })
+        yield f"data: {json.dumps(data)}\n\n"
 
 # for completion
 @app.post("/chat/completions", dependencies=[Depends(user_api_key_auth)])
 async def completion(request: Request):
-    key = request.headers.get("Authorization").replace("Bearer ", "")  # type: ignore
+    key = request.headers.get("Authorization").replace("Bearer ", "")
     data = await request.json()
     data["user_key"] = key
-    data["budget_manager"] = budget_manager
     data["master_key"] = master_key
+    data['trace_id'] = str(uuid.uuid4())
     set_env_variables(data)
-    # handle how users send streaming
     if 'stream' in data:
-        if type(data['stream']) == str: # if users send stream as str convert to bool
-            # convert to bool
+        if type(data['stream']) == str:
             if data['stream'].lower() == "true":
                 data['stream'] = True # convert to boolean
-    
+    if data['stream']:
+        data['stream_options'] = {"include_usage": True}
     response = llm.completion(**data)
-    if 'stream' in data and data['stream'] == True: # use generate_responses to stream responses
-            return StreamingResponse(data_generator(response), media_type='text/event-stream')
+    if 'stream' in data and data['stream'] == True:
+            return StreamingResponse(data_generator(response, response.generation), media_type='text/event-stream')
     return response
 
-@app.get("/models") # if project requires model list 
+@app.get("/models")
 def model_list(): 
-    available_models = litellm.utils.get_valid_models()
+    available_models = []
     data = []
     for model in available_models: 
         {
@@ -116,24 +130,24 @@ async def report_current(request: Request):
 async def generate_key(request: Request):
     try:
         data = await request.json()
-        data.get("total_budget")
+        data.get("budget")
     except:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-    total_budget = data["total_budget"]
-
+    budget = data["budget"]
     api_key = f"sk-rc-{secrets.token_urlsafe(16)}"
-
+    user_key = APIKey(key=api_key, budget=budget)
     try:
-        budget_manager.create_budget(
-            total_budget=total_budget, user=api_key, duration="monthly"
-        )
-        user_api_keys.add(api_key)
+        with Session(engine) as session:
+            session.add(user_key)
+            session.commit()
+            session.refresh(user_key)
+            
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return {"api_key": api_key, "total_budget": total_budget, "duration": "monthly"}
+    return user_key
 
 
 if __name__ == "__main__":

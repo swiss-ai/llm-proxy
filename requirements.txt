@@ -1,9 +1,9 @@
 uvicorn
 fastapi
-litellm
 backoff
 redis
-supabase
-orjson
 apscheduler
 jwt
+langfuse
+sqlmodel
+psycopg2-binary
