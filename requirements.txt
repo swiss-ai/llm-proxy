@@ -7,3 +7,4 @@ jwt
 langfuse
 sqlmodel
 psycopg2-binary
+openai
