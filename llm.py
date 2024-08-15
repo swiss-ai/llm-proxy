@@ -11,6 +11,7 @@ if os.getenv("DISABLE_TRACKING", "0") == "1":
     disable_tracking = True
     import openai
 else:
+    disable_tracking = False
     from langfuse.openai import openai
 
 cost_dict: Dict[str, Dict[str, float]] = defaultdict(dict)
