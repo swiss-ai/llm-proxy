@@ -1,1 +1,1 @@
-# Swiss AI Serving Proxy
+# LLM Serving Proxy
