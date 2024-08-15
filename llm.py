@@ -1,5 +1,4 @@
 import os
-import openai
 import backoff
 import threading
 import uuid
@@ -7,7 +6,12 @@ from typing import Dict
 from collections import defaultdict
 from protocol import ModelResponse
 from errors import RetryConstantError, RetryExpoError, UnknownLLMError
-from langfuse.openai import openai
+if os.getenv("DISABLE_TRACKING", "0") == "1":
+    print("Tracking is disabled")
+    disable_tracking = True
+    import openai
+else:
+    from langfuse.openai import openai
 
 cost_dict: Dict[str, Dict[str, float]] = defaultdict(dict)
 cost_dict_lock = threading.Lock()
@@ -15,11 +19,8 @@ API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/ll
 
 client = openai.OpenAI(
     api_key=os.getenv("RC_VLLM_API_KEY", "YOUR_API_KEY"),
-    base_url=API_BASE
+    base_url=API_BASE,
 )
-def _update_costs_thread(budget_manager):
-    thread = threading.Thread(target=budget_manager.save_data)
-    thread.start()
 
 def handle_llm_exception(e: Exception):
     if isinstance(
@@ -61,18 +62,27 @@ def completion(**kwargs) -> ModelResponse:
     master_key = kwargs.pop("master_key")
     def _completion():
         try:
-            default_model = os.getenv("DEFAULT_MODEL", None)
-            if default_model is not None and default_model != "":
-                kwargs["model"] = default_model
             kwargs['name']="chat-generation"
             if user_key == master_key:
                 # use as admin of the server
                 kwargs['user_id'] = user_key
+                if disable_tracking:
+                    kwargs.pop("trace_id", None)
+                    kwargs.pop("user_id", None)
+                    kwargs.pop("user_key", None)
+                    kwargs.pop("session_id", None)
+                    kwargs.pop("name", None)
                 response = client.chat.completions.create(**kwargs)
             else:
                 # for end user based rate limiting
                 # todo: budget control here
                 kwargs['user_id'] = user_key
+                if disable_tracking:
+                    kwargs.pop("trace_id", None)
+                    kwargs.pop("user_id", None)
+                    kwargs.pop("user_key", None)
+                    kwargs.pop("session_id", None)
+                    kwargs.pop("name", None)
                 response = client.chat.completions.create(**kwargs)
             return response
         except Exception as e:

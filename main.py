@@ -4,7 +4,6 @@ import time
 import uuid
 import secrets
 import traceback
-from langfuse import Langfuse
 from sqlmodel import create_engine, Session, select
 from fastapi import FastAPI, Request, status, HTTPException, Depends
 from fastapi.responses import StreamingResponse
@@ -30,20 +29,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-langfuse = Langfuse(
-    secret_key=os.environ.get("LANGFUSE_SECRET_KEY"),
-    public_key=os.environ.get("LANGFUSE_PUBLIC_KEY"),
-    host=os.environ.get("LANGFUSE_HOST"),
-)
 os.environ['OPENAI_API_KEY'] = "YOUR_API_KEY"
 
-def update_usage(generation):
-    generation.update({
-        "usage": {
-            "promptTokens": 1,
-            "completionTokens": 1,
-        }
-    })
 ######## AUTH UTILITIES ################
 
 def user_api_key_auth(api_key: str = Depends(oauth2_scheme)):
@@ -84,12 +71,14 @@ async def completion(request: Request):
     data = await request.json()
     data["user_key"] = key
     data["master_key"] = master_key
-    data['trace_id'] = str(uuid.uuid4())
+    if not os.getenv("DISABLE_TRACKING", "0") == "1":
+        data['trace_id'] = str(uuid.uuid4())
     set_env_variables(data)
-    if 'stream' in data:
-        if type(data['stream']) == str:
-            if data['stream'].lower() == "true":
-                data['stream'] = True # convert to boolean
+    if 'stream' not in data:
+        data['stream'] = False
+    if type(data['stream']) == str:
+        if data['stream'].lower() == "true":
+            data['stream'] = True # convert to boolean
     if data['stream']:
         data['stream_options'] = {"include_usage": True}
     response = llm.completion(**data)
