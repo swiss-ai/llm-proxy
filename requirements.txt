@@ -8,3 +8,4 @@ langfuse
 sqlmodel
 psycopg2-binary
 openai
+python-dotenv
