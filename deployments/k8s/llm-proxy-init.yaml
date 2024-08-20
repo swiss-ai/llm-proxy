@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-proxy-init
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-proxy-init
+  minReadySeconds: 30
+  template:
+    metadata:
+      labels:
+        app: llm-proxy-init
+    spec:
+      containers:
+      - name: llm-proxy-init
+        image: ghcr.io/xiaozheyao/llm-proxy:dev
+        command: ["python"]
+        args: ["user_utils.py"]
+        ports:
+          - containerPort: 8080
+        envFrom:
+          - configMapRef:
+              name: llm-proxy

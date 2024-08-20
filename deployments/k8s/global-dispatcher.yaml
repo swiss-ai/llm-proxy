@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-service
+  labels:
+    app: lb-service
+spec:
+  type: LoadBalancer
+  ports:
+  - name: ocf-http
+    port: 8092
+    targetPort: 8092
+  - name: ocf-p2p
+    port: 43905
+    targetPort: 43905
+  selector:
+    app: llm-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-service
+  minReadySeconds: 30
+  template:
+    metadata:
+      labels:
+        app: llm-service
+    spec:
+      containers:
+      - name: global-dispatcher
+        image: ghcr.io/xiaozheyao/ocf:amd64-dev
+        args: ["start", "--mode", "standalone"]
+      restartPolicy: Always
