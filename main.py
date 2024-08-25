@@ -4,6 +4,8 @@ import time
 import uuid
 import secrets
 import traceback
+from urllib.parse import urlparse
+
 from sqlmodel import create_engine, Session, select
 from fastapi import FastAPI, Request, status, HTTPException, Depends
 from fastapi.responses import StreamingResponse
@@ -11,10 +13,12 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 
 import llm as llm
-from utils import getenv, set_env_variables
+from utils import getenv, set_env_variables, get_all_models
 from user_utils import APIKey
 
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
+ENDPOINT = urlparse(API_BASE)
+ENDPOINT = f"{ENDPOINT.scheme}://{ENDPOINT.netloc}/v1/dnt/table"
 master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-xzyao")
 PG_HOST = os.environ.get("PG_HOST", "sqlite:///./test.db")
 
@@ -88,15 +92,15 @@ async def completion(request: Request):
 
 @app.get("/models")
 def model_list(): 
-    available_models = []
+    available_models = get_all_models(endpoint=ENDPOINT)
     data = []
     for model in available_models: 
-        {
+        data.append({
             "id": model, 
-            "object": model, 
+            "object": "model", 
             "created": int(time.time()), 
-            "owned_by": "Research Computer"
-        }
+            "owned_by": "0x00"
+        })
     return dict(
         data=data,
         object="list",
