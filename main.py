@@ -18,6 +18,7 @@ from user_utils import APIKey
 
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
 ENDPOINT = urlparse(API_BASE)
+
 ENDPOINT = f"{ENDPOINT.scheme}://{ENDPOINT.netloc}/v1/dnt/table"
 master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-xzyao")
 PG_HOST = os.environ.get("PG_HOST", "sqlite:///./test.db")

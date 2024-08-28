@@ -27,12 +27,15 @@ def get_all_models(endpoint: str):
     providers = requests.get(endpoint).json()
     for provider in providers.keys():
         services = providers[provider]['service']
-        for svc in services:
-            if svc['name'] == "llm":
-                # identity groups are in the form of "key=value", we split into tuples
-                identity_groups = [tuple(x.split("=")) for x in svc['identity_group']]
-                # filter out the tuple that has the key "model"
-                model = dict(filter(lambda x: x[0] == "model", identity_groups))['model']
-                available_models.append(model)
+        try:
+            for svc in services:
+                if svc['name'] == "llm":
+                    # identity groups are in the form of "key=value", we split into tuples
+                    identity_groups = [tuple(x.split("=")) for x in svc['identity_group']]
+                    # filter out the tuple that has the key "model"
+                    model = dict(filter(lambda x: x[0] == "model", identity_groups))['model']
+                    available_models.append(model)
+        except Exception as e:
+            pass
     return available_models
                 
