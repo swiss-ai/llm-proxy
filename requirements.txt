@@ -10,3 +10,8 @@ psycopg2-binary
 openai
 python-dotenv
 requests
+python-dotenv>=0.19.2
+authlib>=1.0
+itsdangerous
+jinja2
+starsessions
