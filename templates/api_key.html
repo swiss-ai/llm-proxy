@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Swiss AI Serving API Key</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        p {
+            color: #666;
+            line-height: 1.5;
+        }
+        .api-key {
+            font-size: 18px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .warning {
+            color: #ff5722;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Swiss AI Serving API Key</h1>
+        <p>Hi, {{ user.name}}!</p>
+        {% if api_key %}
+            <p>Your API Key: <strong class="api-key">{{ api_key }}</strong></p>
+        {% else %}
+            <p>No API key found. Please log in to generate an API key.</p>
+        {% endif %}
+        <p class="warning">Warning! Please keep your API key secure and do not share it with others.</p>
+        <p class="warning">You will not be able to view your API key again. Every time you visit this page, a new API key will be generated.</p>
+
+        <h2>Code Samples</h2>
+        <p>Here are some code samples to help you get started:</p>
+        <pre><code>
+import openai
+
+client = openai.Client(api_key="{{api_key}}", base_url="http://148.187.108.173:8080")
+res = client.chat.completions.create(
+    model="meta-llama/Meta-Llama-3.1-70B-Instruct",
+    messages=[
+        {
+            "content": "Who is Pablo Picasso?", 
+            "role": "user",
+        }
+    ],
+    stream=True,
+)
+
+for chunk in res:
+    if len(chunk.choices) > 0 and chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+        </code></pre>
+    </div>
+</body>
+</html>
