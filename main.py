@@ -8,13 +8,17 @@ from urllib.parse import urlparse
 
 from sqlmodel import create_engine, Session, select
 from fastapi import FastAPI, Request, status, HTTPException, Depends
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
-
+from authlib.integrations.starlette_client import OAuth
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.requests import Request as StarletteRequest
 import llm as llm
 from utils import getenv, set_env_variables, get_all_models
 from user_utils import APIKey
+from fastapi.templating import Jinja2Templates
+
 
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
 ENDPOINT = urlparse(API_BASE)
@@ -24,7 +28,21 @@ master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-x
 PG_HOST = os.environ.get("PG_HOST", "sqlite:///./test.db")
 
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key="some-random-string")
+templates = Jinja2Templates(directory="templates")
 engine = create_engine(PG_HOST)
+
+oauth = OAuth()
+
+oauth.register(
+    "auth0",
+    client_id=os.environ.get("AUTH0_CLIENT_ID"),
+    client_secret=os.environ.get("AUTH0_CLIENT_SECRET"),
+    client_kwargs={
+        "scope": "openid profile email",
+    },
+    server_metadata_url=f'https://{os.environ.get("AUTH0_DOMAIN")}/.well-known/openid-configuration'
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -106,6 +124,10 @@ def model_list():
         data=data,
         object="list",
     )
+    
+@app.get("/", response_class=HTMLResponse)
+async def terms_of_use(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/health")
@@ -137,6 +159,65 @@ async def generate_key(request: Request):
 
     return user_key
 
+@app.post("/keys", dependencies=[Depends(key_auth)])
+async def import_keys(request: Request):
+    try:
+        data = await request.json()
+        keys = data.get("keys")
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+    for key in keys:
+        user_key = APIKey(key=key["key"], budget=key["budget"])
+        try:
+            with Session(engine) as session:
+                session.add(user_key)
+                session.commit()
+                session.refresh(user_key)
+        except Exception as e:
+            traceback.print_exc()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return {"status": "ok"}
+
+@app.get("/login")
+async def login(request: Request):
+    callback_addr = str(request.base_url)+"users/callbacks"
+    print(callback_addr)
+    return await oauth.auth0.authorize_redirect(
+        request=request,
+        redirect_uri=callback_addr,
+    )
+
+@app.get("/users/callbacks")
+async def callback(request: StarletteRequest):
+    user = await oauth.auth0.authorize_access_token(request=request)
+    request.session['user'] = user
+    response = RedirectResponse(url="/api_key")
+    response.set_cookie("user", user['userinfo'])
+    return response
+
+@app.get("/api_key", response_class=HTMLResponse)
+async def get_api_key(request: Request):
+    # retrieve the users
+    user_info = request.cookies.get("user")
+    user_info = user_info.replace("\'", "\"")
+    user_info = json.loads(user_info)
+    if user_info['https://cilogon.org/idp_name'] in ['ETH Zurich', 'EPFL - EPF Lausanne']:
+        api_key = f"sk-rc-{secrets.token_urlsafe(16)}"
+        user_key = APIKey(key=api_key, budget=1000)
+        try:
+            with Session(engine) as session:
+                session.add(user_key)
+                session.commit()
+                session.refresh(user_key)
+        except Exception as e:
+            traceback.print_exc()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not authenticated!")
+
+    return templates.TemplateResponse("api_key.html", {"request": request, "api_key": api_key, "user": user_info})
 
 if __name__ == "__main__":
     import uvicorn
