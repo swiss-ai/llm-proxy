@@ -58,7 +58,7 @@ def handle_llm_exception(e: Exception):
     max_value=100,
     factor=1.5,
 )
-def completion(**kwargs) -> ModelResponse:
+def chat_completion(**kwargs) -> ModelResponse:
     user_key = kwargs.pop("user_key")
     master_key = kwargs.pop("master_key")
     def _completion():
@@ -85,6 +85,54 @@ def completion(**kwargs) -> ModelResponse:
                     kwargs.pop("session_id", None)
                     kwargs.pop("name", None)
                 response = client.chat.completions.create(**kwargs)
+            return response
+        except Exception as e:
+            handle_llm_exception(e) # this tries fallback requests
+    try:
+        return _completion()
+    except Exception as e:
+        raise e
+    
+@backoff.on_exception(
+    wait_gen=backoff.constant,
+    exception=RetryConstantError,
+    max_tries=3,
+    interval=3,
+)
+@backoff.on_exception(
+    wait_gen=backoff.expo,
+    exception=RetryExpoError,
+    jitter=backoff.full_jitter,
+    max_value=100,
+    factor=1.5,
+)
+def completion(**kwargs) -> ModelResponse:
+    user_key = kwargs.pop("user_key")
+    master_key = kwargs.pop("master_key")
+    def _completion():
+        try:
+            kwargs['name']="chat-generation"
+            if user_key == master_key:
+                # use as admin of the server
+                kwargs['user_id'] = user_key
+                if disable_tracking:
+                    kwargs.pop("trace_id", None)
+                    kwargs.pop("user_id", None)
+                    kwargs.pop("user_key", None)
+                    kwargs.pop("session_id", None)
+                    kwargs.pop("name", None)
+                response = client.completions.create(**kwargs)
+            else:
+                # for end user based rate limiting
+                # todo: budget control here
+                kwargs['user_id'] = user_key
+                if disable_tracking:
+                    kwargs.pop("trace_id", None)
+                    kwargs.pop("user_id", None)
+                    kwargs.pop("user_key", None)
+                    kwargs.pop("session_id", None)
+                    kwargs.pop("name", None)
+                response = client.completions.create(**kwargs)
             return response
         except Exception as e:
             handle_llm_exception(e) # this tries fallback requests

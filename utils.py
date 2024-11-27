@@ -38,4 +38,3 @@ def get_all_models(endpoint: str):
         except Exception as e:
             pass
     return available_models
-                

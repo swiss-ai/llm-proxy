@@ -16,7 +16,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request as StarletteRequest
 import llm as llm
 from utils import getenv, set_env_variables, get_all_models
-from user_utils import APIKey
+from user_utils import APIKey, get_or_create_apikey
 from fastapi.templating import Jinja2Templates
 
 
@@ -87,8 +87,30 @@ def data_generator(response, generation):
             })
         yield f"data: {json.dumps(data)}\n\n"
 
-# for completion
+
 @app.post("/chat/completions", dependencies=[Depends(user_api_key_auth)])
+async def completion(request: Request):
+    key = request.headers.get("Authorization").replace("Bearer ", "")
+    data = await request.json()
+    data["user_key"] = key
+    data["master_key"] = master_key
+    if not os.getenv("DISABLE_TRACKING", "0") == "1":
+        data['trace_id'] = str(uuid.uuid4())
+    set_env_variables(data)
+    if 'stream' not in data:
+        data['stream'] = False
+    if type(data['stream']) == str:
+        if data['stream'].lower() == "true":
+            data['stream'] = True # convert to boolean
+    if data['stream']:
+        data['stream_options'] = {"include_usage": True}
+    response = llm.chat_completion(**data)
+    if 'stream' in data and data['stream'] == True:
+            return StreamingResponse(data_generator(response, response.generation), media_type='text/event-stream')
+    return response
+
+
+@app.post("/completions", dependencies=[Depends(user_api_key_auth)])
 async def completion(request: Request):
     key = request.headers.get("Authorization").replace("Bearer ", "")
     data = await request.json()
@@ -129,60 +151,13 @@ def model_list():
 async def terms_of_use(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
-######## KEY MANAGEMENT ################
-
-@app.post("/key/new", dependencies=[Depends(key_auth)])
-async def generate_key(request: Request):
-    try:
-        data = await request.json()
-        data.get("budget")
-    except:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-
-    budget = data["budget"]
-    api_key = f"sk-rc-{secrets.token_urlsafe(16)}"
-    user_key = APIKey(key=api_key, budget=budget)
-    try:
-        with Session(engine) as session:
-            session.add(user_key)
-            session.commit()
-            session.refresh(user_key)
-            
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return user_key
-
-@app.post("/keys", dependencies=[Depends(key_auth)])
-async def import_keys(request: Request):
-    try:
-        data = await request.json()
-        keys = data.get("keys")
-    except:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-
-    for key in keys:
-        user_key = APIKey(key=key["key"], budget=key["budget"])
-        try:
-            with Session(engine) as session:
-                session.add(user_key)
-                session.commit()
-                session.refresh(user_key)
-        except Exception as e:
-            traceback.print_exc()
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return {"status": "ok"}
-
 @app.get("/login")
 async def login(request: Request):
-    callback_addr = str(request.base_url)+"users/callbacks"
+    callback_addr = f"{request.base_url}users/callbacks"
     print(callback_addr)
     return await oauth.auth0.authorize_redirect(
         request=request,
@@ -195,29 +170,22 @@ async def callback(request: StarletteRequest):
     request.session['user'] = user
     response = RedirectResponse(url="/api_key")
     response.set_cookie("user", user['userinfo'])
-    return response
+    try:
+        return response
+    except Exception as e:
+        return {"error": "error"}
 
 @app.get("/api_key", response_class=HTMLResponse)
 async def get_api_key(request: Request):
     # retrieve the users
     user_info = request.cookies.get("user")
-    user_info = user_info.replace("\'", "\"")
-    user_info = json.loads(user_info)
+    user_info = json.loads(user_info.replace("\'", "\""))
     if user_info['https://cilogon.org/idp_name'] in ['ETH Zurich', 'EPFL - EPF Lausanne']:
-        api_key = f"sk-rc-{secrets.token_urlsafe(16)}"
-        user_key = APIKey(key=api_key, budget=1000)
-        try:
-            with Session(engine) as session:
-                session.add(user_key)
-                session.commit()
-                session.refresh(user_key)
-        except Exception as e:
-            traceback.print_exc()
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        user_key = get_or_create_apikey(engine=engine, owner_email=user_info['email']).key
     else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not authenticated!")
-
-    return templates.TemplateResponse("api_key.html", {"request": request, "api_key": api_key, "user": user_info})
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"User not authenticated! Your IDP is {user_info['https://cilogon.org/idp_name']}")
+    available_models = get_all_models(endpoint=ENDPOINT)
+    return templates.TemplateResponse("api_key.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models})
 
 if __name__ == "__main__":
     import uvicorn
