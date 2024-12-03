@@ -1,4 +1,5 @@
 import os
+import secrets
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Session, create_engine, select
 
@@ -15,9 +16,11 @@ def get_or_create_apikey(engine, owner_email: str) -> APIKey:
             select(APIKey).where(APIKey.owner_email == owner_email)
         ).first()
         if api_key is None:
-            api_key = APIKey(owner_email=owner_email)
+            key = f"sk-rc-{secrets.token_urlsafe(16)}"
+            api_key = APIKey(key=key, owner_email=owner_email)
             session.add(api_key)
             session.commit()
+            session.refresh(api_key)
         return api_key
 
 if __name__ =="__main__":

@@ -37,4 +37,5 @@ def get_all_models(endpoint: str):
                     available_models.append(model)
         except Exception as e:
             pass
+    available_models = list(set(available_models))
     return available_models

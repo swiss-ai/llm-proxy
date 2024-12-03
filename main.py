@@ -135,13 +135,14 @@ async def completion(request: Request):
 def model_list(): 
     available_models = get_all_models(endpoint=ENDPOINT)
     data = []
-    for model in available_models: 
-        data.append({
-            "id": model, 
-            "object": "model", 
-            "created": int(time.time()), 
-            "owned_by": "0x00"
-        })
+    for model in available_models:
+        if model not in [x['id'] for x in data]:
+            data.append({
+                "id": model, 
+                "object": "model", 
+                "created": int(time.time()), 
+                "owned_by": "0x00"
+            })
     return dict(
         data=data,
         object="list",
@@ -180,7 +181,7 @@ async def get_api_key(request: Request):
     # retrieve the users
     user_info = request.cookies.get("user")
     user_info = json.loads(user_info.replace("\'", "\""))
-    if user_info['https://cilogon.org/idp_name'] in ['ETH Zurich', 'EPFL - EPF Lausanne']:
+    if user_info['https://cilogon.org/idp_name'] in ['ETH Zurich', 'EPFL - EPF Lausanne', 'Universite de Lausanne', 'Universität Bern', 'University of Zurich']:
         user_key = get_or_create_apikey(engine=engine, owner_email=user_info['email']).key
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"User not authenticated! Your IDP is {user_info['https://cilogon.org/idp_name']}")
