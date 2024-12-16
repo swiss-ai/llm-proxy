@@ -1,7 +1,6 @@
 import os
 import backoff
 import threading
-import uuid
 from typing import Dict
 from collections import defaultdict
 from protocol import ModelResponse
@@ -14,8 +13,6 @@ else:
     disable_tracking = False
     from langfuse.openai import openai
 
-cost_dict: Dict[str, Dict[str, float]] = defaultdict(dict)
-cost_dict_lock = threading.Lock()
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
 
 client = openai.OpenAI(

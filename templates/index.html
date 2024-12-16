@@ -1,48 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Swiss AI Serving</title>
+    <meta charset="UTF-8">
+    <title>Terms of Use</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
-            background-color: #fff;
             padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        p {
-            color: #666;
-            line-height: 1.5;
         }
         .login-btn {
             display: inline-block;
-            background-color: #007bff;
+            padding: 10px 20px;
+            background-color: #007acc;
             color: #fff;
             text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            transition: background-color 0.3s;
+            border-radius: 5px;
         }
-        .login-btn:hover {
-            background-color: #0056b3;
+        .login-container {
+            text-align: center;
+            margin-bottom: 20px;
         }
         .info-link {
-            color: #007bff;
-            text-decoration: none;
+            color: #007acc;
         }
-        .info-link:hover {
-            text-decoration: underline;
+        .contributors-section {
+            background-color: #f9f9f9;
+            padding: 40px 0;
+        }
+        .contributors-text {
+            text-align: center;
+            color: #333;
+        }
+        .contributors-logos {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .contributors-logos img {
+            max-width: 100px;
+            height: auto;
         }
     </style>
 </head>
@@ -51,10 +55,22 @@
         <h1>Terms of Use</h1>
         <p>By clicking the login button below, you agree to the following terms and conditions...</p>
         <p>Click Login, and then Login with CILogon and select ETH Zurich/EPFL.</p>
-        <div style="text-align: center; margin-bottom: 20px;">
+        <div class="login-container">
             <a href="/login" class="login-btn">Login</a>
         </div>
         <p>For more information, please visit our <a href="https://github.com/swiss-ai/modelServing" class="info-link">website</a>.</p>
+    </div>
+
+    <div class="contributors-section">
+        <div class="container">
+            <p class="contributors-text">
+                This API is made possible with the following contributors, projects, and friends:
+            </p>
+            <div class="contributors-logos">
+                <a href="https://langfuse.com/"><img src="https://github.com/langfuse/langfuse-docs/blob/main/public/langfuse_logo.png?raw=true" alt="Langfuse 1">
+                </a>
+            </div>
+        </div>
     </div>
 </body>
 </html>
