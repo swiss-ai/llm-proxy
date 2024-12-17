@@ -13,7 +13,7 @@ from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request as StarletteRequest
 import llm as llm
-from utils import getenv, set_env_variables, get_all_models
+from utils import getenv, set_env_variables, get_all_models, get_online_models
 from user_utils import APIKey, get_or_create_apikey
 from fastapi.templating import Jinja2Templates
 
@@ -185,6 +185,33 @@ async def get_api_key(request: Request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"User not authenticated! Your IDP is {user_info['https://cilogon.org/idp_name']}")
     available_models = get_all_models(endpoint=ENDPOINT)
     return templates.TemplateResponse("api_key.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models})
+
+@app.get("/metrics/aggregated")
+def get_aggregated_metrics(request: Request):
+    online_models = get_online_models(endpoint=ENDPOINT)
+
+    # Fetch metrics for each online model
+    aggregated_metrics = []
+    for model in online_models:
+        try:
+            metrics_response = request.get(model["metrics_url"])
+            if metrics_response.status_code == 200:
+                aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model['id']})\n{metrics_response.text}")
+            else:
+                aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model['id']})\n# Failed to fetch metrics: {metrics_response.status_code}")
+        except Exception as e:
+            aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model['id']})\n# Failed to fetch metrics: {e}")
+
+    # Combine metrics into a single response
+    metrics_output = "\n\n".join(aggregated_metrics)
+    return StreamingResponse(
+        iter([metrics_output]),
+        media_type="text/plain",
+    )
+
+
+
+
 
 if __name__ == "__main__":
     import uvicorn
