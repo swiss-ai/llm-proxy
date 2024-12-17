@@ -2,8 +2,8 @@ import os
 import json
 import time
 import uuid
+import requests
 from urllib.parse import urlparse
-
 from sqlmodel import create_engine, Session, select
 from fastapi import FastAPI, Request, status, HTTPException, Depends
 from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
@@ -16,7 +16,7 @@ import llm as llm
 from utils import getenv, set_env_variables, get_all_models, get_online_models
 from user_utils import APIKey, get_or_create_apikey
 from fastapi.templating import Jinja2Templates
-
+from fastapi.responses import PlainTextResponse
 
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
 ENDPOINT = urlparse(API_BASE)
@@ -29,7 +29,7 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="some-random-string")
 templates = Jinja2Templates(directory="templates")
 engine = create_engine(PG_HOST)
-
+known_keys = set()
 oauth = OAuth()
 
 oauth.register(
@@ -55,15 +55,21 @@ os.environ['OPENAI_API_KEY'] = "YOUR_API_KEY"
 ######## AUTH UTILITIES ################
 
 def user_api_key_auth(api_key: str = Depends(oauth2_scheme)):
+    global known_keys
     if api_key == master_key:
         return
-    with Session(engine) as session:
-        api_keys = session.exec(select(APIKey).where(APIKey.key == api_key)).all()
-    if len(api_keys) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": "invalid user key"},
-        )
+    if api_key in known_keys:
+        return
+    else:
+        with Session(engine) as session:
+            api_keys = session.exec(select(APIKey).where(APIKey.key == api_key)).all()
+            known_keys.update([x.key for x in api_keys])
+        if len(api_keys) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"error": "invalid user key"},
+            )
+        return
 
 def key_auth(api_key: str = Depends(oauth2_scheme)):
     if api_key != master_key:
@@ -186,32 +192,29 @@ async def get_api_key(request: Request):
     available_models = get_all_models(endpoint=ENDPOINT)
     return templates.TemplateResponse("api_key.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models})
 
-@app.get("/metrics/aggregated")
+@app.get("/metrics")
 def get_aggregated_metrics(request: Request):
     online_models = get_online_models(endpoint=ENDPOINT)
-
     # Fetch metrics for each online model
     aggregated_metrics = []
     for model in online_models:
         try:
-            metrics_response = request.get(model["metrics_url"])
+            metrics_response = requests.get(model["metrics_url"])
             if metrics_response.status_code == 200:
-                aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model['id']})\n{metrics_response.text}")
+                metrics_response = metrics_response.text
+                aggregated_metrics.append(metrics_response)
             else:
-                aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model['id']})\n# Failed to fetch metrics: {metrics_response.status_code}")
+                print(f"err: {metrics_response.text}")
         except Exception as e:
-            aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model['id']})\n# Failed to fetch metrics: {e}")
-
+            print(f"Error: {e}")
+            #aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model})\n# Failed to fetch metrics: {e}")
+    
     # Combine metrics into a single response
-    metrics_output = "\n\n".join(aggregated_metrics)
-    return StreamingResponse(
-        iter([metrics_output]),
+    metrics_output = "".join(aggregated_metrics)
+    return PlainTextResponse(
+        metrics_output,
         media_type="text/plain",
     )
-
-
-
-
 
 if __name__ == "__main__":
     import uvicorn
