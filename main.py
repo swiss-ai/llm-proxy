@@ -192,6 +192,16 @@ async def get_api_key(request: Request):
     available_models = get_all_models(endpoint=ENDPOINT)
     return templates.TemplateResponse("api_key.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models})
 
+@app.get("/chat", response_class=HTMLResponse)
+async def get_chat_gui(request: Request):
+    # retrieve the users
+    user_info = request.cookies.get("user")
+    user_info = json.loads(user_info.replace("\'", "\""))
+    if user_info['https://cilogon.org/idp_name'] not in ['ETH Zurich', 'EPFL - EPF Lausanne', 'Universite de Lausanne', 'Universität Bern', 'University of Zurich']:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"User not authenticated! Your IDP is {user_info['https://cilogon.org/idp_name']}")
+    user_key = get_or_create_apikey(engine=engine, owner_email=user_info['email']).key
+    return templates.TemplateResponse("chat_gui.html", {"request": request, "api_key": user_key})
+
 @app.get("/metrics")
 def get_aggregated_metrics(request: Request):
     online_models = get_online_models(endpoint=ENDPOINT)
