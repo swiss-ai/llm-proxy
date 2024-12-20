@@ -1,73 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Swiss AI LLM Chat</title>
-	<script defer src="/static/chat.js"></script>
-	<script src="https://cdn.tailwindcss.com"></script>
-	<script
-		src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js"></script>
-	<script
-		src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
-
-	<script>
-		tailwind.config = {
-			theme: {
-				extend: {
-					colors: {
-						clifford: '#da373d',
-					}
-				}
-			}
-		}
-	</script>
-</head>
-
-<body class="bg-gray-100 min-h-screen flex flex-col p-4 md:p-8 lg:p-12">
-	<div id="appContainer"
-		class="w-full max-w-full h-screen md:max-w-2xl lg:max-w-4xl xl:max-w-6xl bg-white rounded-lg shadow-lg p-6 flex flex-col gap-2 mx-auto">
-		<div id="header" class="flex flex-col gap-4">
-			<h2 class="text-2xl font-semibold text-gray-800">Swiss AI LLM Chat</h2>
-			<div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-				<label for="apiKey" class="text-gray-700 font-medium w-full sm:w-auto">API Key:</label>
-				<input id="apiKey" type="text" placeholder="Enter API key"
-					value="{{ apiKey }}"
-					aria-disabled="true"
-					disabled
-					class="border border-gray-300 rounded px-2 py-1 w-full sm:flex-grow focus:outline-none focus:ring-2 focus:ring-blue-500">
-			</div>
-
-			<div class="model-selector flex flex-col sm:flex-row items-start sm:items-center gap-2">
-				<label for="modelSelect" class="text-gray-700 font-medium w-full sm:w-auto">Choose Model:</label>
-				<select id="modelSelect"
-					class="border border-gray-300 rounded px-2 py-1 w-full sm:flex-grow focus:outline-none focus:ring-2 focus:ring-blue-500">
-					<option value="">Loading models...</option>
-				</select>
-			</div>
-		</div>
-
-		<!-- For the chat output, we use a responsive height that grows on larger screens -->
-		<div id="chatOutput"
-			class="chat-history overflow-y-auto border border-gray-200 rounded p-4 bg-gray-50 space-y-4 h-80 sm:h-96 md:h-[50vh] lg:h-[60vh] xl:h-[70vh]">
-		</div>
-
-		<form id="chatForm" action="javascript:void(0)" class="flex flex-col sm:flex-row items-stretch gap-2">
-			<input id="chatMessage"
-				class="input-field flex-grow border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-				type="text" placeholder="Enter message..." name="usrnm">
-			<button type="submit" id="sendBtn"
-				class="btn bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-				Send
-			</button>
-		</form>
-
-		<div id="loadingContainer"
-			class="container darker d-none flex items-center justify-center bg-yellow-100 text-yellow-800 font-semibold py-2 px-4 rounded invisible">
-			<p>AI is thinking...</p>
-		</div>
-	</div>
-</body>
-<script src="https://cdn.jsdelivr.net/gh/MarketingPipeline/Markdown-Tag/markdown-tag.js"></script> 
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swiss AI LLM Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="static/chat.css">
+    <!-- For templates -->
+    <script>const API_KEY = "{{ api_key }}";</script>
+    <script defer src="static/chat.js"></script>
+  </head>
+  <body>
+    <div id="appContainer">
+      <div id="header" class="responsive-header">
+        <h1>Swiss AI LLM Chat</h1>
+        <div class="model-selector">
+          <div class="custom-dropdown">
+            <select id="modelSelect">
+              <option value="">Loading models...</option>
+            </select>
+	    <!-- Templating: -->
+	    <!-- {% for model in models %} -->
+	    <!-- <option value="{{ model }}">{{ model }}</option> -->
+	    <!-- {% endfor %} -->
+          </div>
+        </div>
+      </div>
+      <div id="chatOutput" class="chat-history">
+        <!-- Chat messages will appear here -->
+      </div>
+      <form id="chatForm" action="javascript:void(0)">
+        <div class="input-container">
+          <input id="chatMessage" class="input-field" type="text" placeholder="Enter message..." name="usrnm">
+	  <button type="submit" id="sendBtn" class="btn"></button>
+        </div>
+      </form>
+    </div>
+  </body>
 </html>
