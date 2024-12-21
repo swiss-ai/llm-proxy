@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swiss AI LLM Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="static/images/swiss-ai-logo-small.png">
     <link rel="stylesheet" href="static/chat.css">
+    <!-- <script defer src="keys.js"></script> -->
     <!-- For templates -->
     <script>const API_KEY = "{{ apiKey }}";</script>
     <script defer src="static/chat.js"></script>
@@ -16,13 +19,15 @@
         <h1>Swiss AI LLM Chat</h1>
         <div class="model-selector">
           <div class="custom-dropdown">
-            <select id="modelSelect">
-              <option value="">Loading models...</option>
-            </select>
+            <!-- <select id="modelSelect"> --> 
+            <!--   <option value="">Loading models...</option> -->
+            <!-- </select> -->
 	    <!-- Templating: -->
-	    <!-- {% for model in models %} -->
-	    <!-- <option value="{{ model }}">{{ model }}</option> -->
-	    <!-- {% endfor %} -->
+            <select id="modelSelect"> 
+	      {% for model in models %}
+	      <option value="{{ model }}">{{ model }}</option>
+	      {% endfor %}
+	    </select>
           </div>
         </div>
       </div>
