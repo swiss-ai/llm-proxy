@@ -6,7 +6,7 @@ import requests
 from urllib.parse import urlparse
 from sqlmodel import create_engine, Session, select
 from fastapi import FastAPI, Request, status, HTTPException, Depends
-from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from authlib.integrations.starlette_client import OAuth
@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 
 import llm as llm
 from utils import getenv, set_env_variables, get_all_models, get_online_models
-from user_utils import APIKey, get_or_create_apikey
+from user_utils import APIKey, get_or_create_apikey, rotate_key
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import PlainTextResponse
 
@@ -139,6 +139,20 @@ async def completion(request: Request):
             return StreamingResponse(data_generator(response, response.generation), media_type='text/event-stream')
     return response
 
+@app.get("/keys/rotation", dependencies=[Depends(user_api_key_auth)])
+def rotate_keys(request: Request):
+    key = request.headers.get("Authorization").replace("Bearer ", "")
+    try:
+        new_key = rotate_key(engine, key)
+        response = JSONResponse(content={"new_key": new_key.key})
+        response.set_cookie("rc_api_key", new_key.key)
+        return response
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": str(e)},
+        )    
+
 @app.get("/models")
 def model_list(): 
     available_models = get_all_models(endpoint=ENDPOINT)
@@ -233,9 +247,9 @@ def get_aggregated_metrics(request: Request):
 @app.get("/chat")
 async def chat(request: Request):
     api_key = request.cookies.get("rc_api_key")
-    available_models = get_all_models(endpoint=ENDPOINT)
     if not api_key:
         return RedirectResponse(url="/login")
+    available_models = get_all_models(endpoint=ENDPOINT)
     return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key, "models": available_models})
 
 @app.get("/metrics")

@@ -23,6 +23,19 @@ def get_or_create_apikey(engine, owner_email: str) -> APIKey:
             session.refresh(api_key)
         return api_key
 
+def rotate_key(engine, key: str) -> APIKey:
+    with Session(engine) as session:
+        api_key = session.exec(
+            select(APIKey).where(APIKey.key == key)
+        ).first()
+        if api_key is None:
+            raise ValueError("Invalid key")
+        api_key.key = f"sk-rc-{secrets.token_urlsafe(16)}"
+        session.add(api_key)
+        session.commit()
+        session.refresh(api_key)
+        return api_key
+
 if __name__ =="__main__":
     pg_host = os.environ.get("PG_HOST", "localhost")
     engine = create_engine(pg_host, echo=True)
