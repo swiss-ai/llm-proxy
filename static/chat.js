@@ -1,5 +1,6 @@
-
 window.onload = function () {
+  const BASE_URL = "https://fmapi.swissai.cscs.ch";
+
   let chatHistory = []; // Persistent chat history
   
   const sendBtnElem = document.getElementById("sendBtn");
@@ -7,8 +8,7 @@ window.onload = function () {
   const chatOutputElem = document.getElementById("chatOutput");
   const modelSelectElem = document.getElementById("modelSelect");
 
-  // Call fetchModels when the page loads
-  fetchModels();
+  // fetchModels();
 
   sendBtnElem.addEventListener("click", function () {
     const message = chatMessageElem.value;
@@ -29,9 +29,7 @@ window.onload = function () {
   });
 
   function fetchModels() {
-    const BASE_URL = "https://fmapi.swissai.cscs.ch/models";
-
-    fetch(BASE_URL, {
+    fetch(`${BASE_URL}/models`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -60,28 +58,18 @@ window.onload = function () {
   }
 
   function generateUserChatBubble(message) {
-    const chatBubbleElem = document.createElement("div");
-    chatBubbleElem.classList.add("container", "user-container");
-    chatBubbleElem.innerHTML = `<p>${message}</p>`;
-    chatOutputElem.appendChild(chatBubbleElem);
+    chatOutputElem.innerHTML += `<div class="container user-container"><p>${message}</p></div>`;
     chatOutputElem.scrollTop = chatOutputElem.scrollHeight;
   }
 
   function generateAIChatBubble() {
-    const chatBubbleElem = document.createElement("div");
-    chatBubbleElem.classList.add("container", "darker");
-    const messageElem = document.createElement("p");
-    chatBubbleElem.appendChild(messageElem);
-    chatOutputElem.appendChild(chatBubbleElem);
+    chatOutputElem.innerHTML += `<div class="container darker"></div>`;
     chatOutputElem.scrollTop = chatOutputElem.scrollHeight;
-
-    return messageElem;
+    return chatOutputElem.lastElementChild;
   }
 
   async function sendMessage(message, model, onSuccessCallback) {
     chatHistory.push({ role: "user", content: message.trim() }); // Add user message to history
-
-    const BASE_URL = "https://fmapi.swissai.cscs.ch/chat/completions";
 
     const messageBody = {
       model: model,
@@ -89,7 +77,7 @@ window.onload = function () {
       stream: true, // Enable streaming
     };
 
-    const response = await fetch(BASE_URL, {
+    const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${API_KEY}`,
@@ -108,6 +96,8 @@ window.onload = function () {
     const decoder = new TextDecoder("utf-8");
     const aiMessageElem = onSuccessCallback();
 
+    let accumulatedText = ""
+
     let buffer = "";
     while (true) {
       const { value, done } = await reader.read();
@@ -118,23 +108,21 @@ window.onload = function () {
       buffer = chunks.pop(); // Keep incomplete chunk in the buffer
 
       for (const chunk of chunks) {
-        if (chunk.startsWith("data:")) {
-          const data = chunk.slice(5).trim(); // Remove "data:" prefix
-          if (data === "[DONE]") {
-            return;
-          }
-	  
-	  try {
-	    const parsed = JSON.parse(data);
-	    if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta && parsed.choices[0].delta.content) {
-	      const partialText = parsed.choices[0].delta.content;
-	      aiMessageElem.textContent += partialText; // Append to the AI chat bubble
-	      chatOutputElem.scrollTop = chatOutputElem.scrollHeight;
-	    }
-	  } catch (error) {
-	    console.error("Error parsing streaming response:", error, data);
+	if (!chunk.startsWith("data:")) continue;
+	
+        const data = chunk.slice(5).trim(); // Remove "data:" prefix
+        if (data === "[DONE]") return;
+	
+	try {
+	  const parsed = JSON.parse(data);
+	  if (parsed?.choices?.[0]?.delta?.content) {
+	    const partialText = parsed.choices[0].delta.content;
+	    accumulatedText += partialText;
+	    aiMessageElem.innerHTML = marked.parse(accumulatedText); 
 	  }
-        }
+	} catch (error) {
+	  console.error("Error parsing streaming response:", error, data);
+	}
       }
     }
 

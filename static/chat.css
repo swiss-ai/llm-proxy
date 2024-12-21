@@ -139,9 +139,28 @@ label {
   background-color: #aaa;
 }
 
-#chatOutput > .container > p {
-  margin: 10px;
+#chatOutput > .container {
+  padding: 10px;
 }
+
+p {
+  margin: 0;
+}
+
+.darker table {
+  border-collapse: collapse; /* Ensures borders collapse into a single line */
+}
+
+.darker th, td {
+  border: 1px solid black; /* Adds borders to table cells */
+  padding: 5px; /* Adds padding inside the cells */
+  /* text-align: left; /* Aligns text to the left */ */
+}
+
+.darker th {
+  font-weight: bold; /* Makes header text bold */
+}
+
 
 /* Adjust header for responsive design */
 #header {
@@ -217,6 +236,4 @@ label {
     max-width: none;
     padding: 2px;
   }
-
-  sendBtn
 }
