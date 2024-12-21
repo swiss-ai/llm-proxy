@@ -233,9 +233,10 @@ def get_aggregated_metrics(request: Request):
 @app.get("/chat")
 async def chat(request: Request):
     api_key = request.cookies.get("rc_api_key")
+    available_models = get_all_models(endpoint=ENDPOINT)
     if not api_key:
         return RedirectResponse(url="/login")
-    return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key})
+    return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key, "models": available_models})
 
 @app.get("/metrics")
 def get_aggregated_metrics(request: Request):

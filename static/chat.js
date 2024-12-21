@@ -8,6 +8,8 @@ window.onload = function () {
   const chatOutputElem = document.getElementById("chatOutput");
   const modelSelectElem = document.getElementById("modelSelect");
 
+  // fetchModels();
+
   sendBtnElem.addEventListener("click", function () {
     const message = chatMessageElem.value;
     const selectedModel = modelSelectElem.value;
