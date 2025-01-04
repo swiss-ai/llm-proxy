@@ -118,7 +118,9 @@ window.onload = function () {
 	  if (parsed?.choices?.[0]?.delta?.content) {
 	    const partialText = parsed.choices[0].delta.content;
 	    accumulatedText += partialText;
-	    aiMessageElem.innerHTML = marked.parse(accumulatedText); 
+	    aiMessageElem.innerHTML = marked.parse(accumulatedText);
+	    // This is annoying
+	    // chatOutputElem.scrollTop = chatOutputElem.scrollHeight; 
 	  }
 	} catch (error) {
 	  console.error("Error parsing streaming response:", error, data);
