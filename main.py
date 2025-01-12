@@ -31,7 +31,10 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="some-random-string")
 templates = Jinja2Templates(directory="templates")
 engine = create_engine(PG_HOST)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+frontend_templates = Jinja2Templates(directory="static/dist")
+app.mount("/_astro", StaticFiles(directory="static/dist/_astro"), name="frontpage")
+app.mount("/static", StaticFiles(directory="static"), name="frontpage")
 
 known_keys = set()
 oauth = OAuth()
@@ -170,10 +173,6 @@ def model_list():
         object="list",
     )
     
-@app.get("/", response_class=HTMLResponse)
-async def terms_of_use(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -275,6 +274,14 @@ def get_aggregated_metrics(request: Request):
         metrics_output,
         media_type="text/plain",
     )
+
+@app.get("/{rest_of_path:path}")
+async def homepage_app(req: Request, rest_of_path: str):
+    if rest_of_path.split("/")[0] in ['docs', 'articles']:
+        return frontend_templates.TemplateResponse(rest_of_path+"/index.html", { 'request': req })
+    return frontend_templates.TemplateResponse('index.html', { 'request': req })
+
+app.mount("/", StaticFiles(directory="static/dist", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

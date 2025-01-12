@@ -7,3 +7,4 @@
 .aider*
 *.pyc
 .idea
+static/dist/
