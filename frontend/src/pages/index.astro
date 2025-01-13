@@ -7,7 +7,7 @@ import Link from "@components/Link.astro";
 import { dateRange } from "@lib/utils";
 import { SITE, HOME } from "@consts";
 
-const docs = (await getCollection("docs"))
+const docs = (await getCollection("guides"))
   .filter(post => !post.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0,SITE.NUM_POSTS_ON_HOMEPAGE);
@@ -48,13 +48,16 @@ const articles = (await getCollection("articles"))
           <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             <a href="/login">Login</a>
           </button>
+          <button class="bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <a href="/chat">Chat</a>
+          </button>
       </section>
       <section class="animate space-y-6">
         <div class="flex flex-wrap gap-y-2 items-center justify-between">
           <h5 class="font-semibold text-black dark:text-white">
             Documentation
           </h5>
-          <Link href="/docs">
+          <Link href="/guides">
             See all docs
           </Link>
         </div>

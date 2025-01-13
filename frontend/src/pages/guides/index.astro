@@ -5,12 +5,12 @@ import Container from "@components/Container.astro";
 import ArrowCard from "@components/ArrowCard.astro";
 import { DOCS } from "@consts";
 
-const data = (await getCollection("docs"))
+const data = (await getCollection("guides"))
   .filter(post => !post.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
   
 type Acc = {
-  [year: string]: CollectionEntry<"docs">[];
+  [year: string]: CollectionEntry<"guides">[];
 }
 
 const posts = data.reduce((acc: Acc, post) => {
