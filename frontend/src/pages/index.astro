@@ -1,0 +1,112 @@
+---
+import { getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import PageLayout from "@layouts/PageLayout.astro";
+import ArrowCard from "@components/ArrowCard.astro";
+import Link from "@components/Link.astro";
+import { dateRange } from "@lib/utils";
+import { SITE, HOME } from "@consts";
+
+const docs = (await getCollection("guides"))
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0,SITE.NUM_POSTS_ON_HOMEPAGE);
+
+const articles = (await getCollection("articles"))
+  .filter(articles => !articles.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0,SITE.NUM_PROJECTS_ON_HOMEPAGE);
+
+---
+
+<PageLayout title={HOME.TITLE} description={HOME.DESCRIPTION}>
+  <Container>
+    <h4 class="animate font-semibold text-black dark:text-white">
+      Welcome to SwissAI ML Serving <span class="text-xl">👋🏻</span> 
+    </h4>
+    <div class="space-y-16">
+      <section>
+        <article class="space-y-4">
+          <p class="animate dark:text-white">
+            SwissAI ML Serving is a research platform. Collectively we make it possible to access to a range of foundation models. 
+          </p>
+          <p class="animate dark:text-white">
+            Currently, the platform is supported by a various of heterogeneous hardware and multiple software stacks. As a research platform, we study
+            how to optimally serve models in a most cost-efficient way.
+          </p>
+          <p class="animate dark:text-white">
+            By using the platform, you agree to the following terms and conditions:
+            <ul class="animate dark:text-white">
+              <li>You allow us to collect metadata of your requests, including but not limited to token length, timestamp, requested models, etc, for research purpose and to improve the service.</li>
+            </ul>
+          </p>
+        </article>
+      </section>
+      <section>
+        <!-- CTA Buttons -->
+        <div class="flex flex-wrap gap-4 animate">
+          <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <a href="/login">Login</a>
+          </button>
+          <button class="bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <a href="/chat">Chat</a>
+          </button>
+      </section>
+      <section class="animate space-y-6">
+        <div class="flex flex-wrap gap-y-2 items-center justify-between">
+          <h5 class="font-semibold text-black dark:text-white">
+            Documentation
+          </h5>
+          <Link href="/guides">
+            See all docs
+          </Link>
+        </div>
+        <ul class="flex flex-col gap-4">
+          {docs.map(post => (
+            <li>
+              <ArrowCard entry={post} />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="animate space-y-6">
+        <div class="flex flex-wrap gap-y-2 items-center justify-between">
+          <h5 class="font-semibold text-black dark:text-white">
+            Research Articles
+          </h5>
+          <Link href="/articles">
+            See all posts
+          </Link>
+        </div>
+        <ul class="flex flex-col gap-4">
+          {articles.map(article => (
+            <li>
+              <ArrowCard entry={article} />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="animate space-y-4">
+        <h5 class="font-semibold text-black dark:text-white">
+          Contributors and Sponsors
+        </h5>
+        <article>
+          <p>
+            We are grateful to the following contributors and sponsors for their support:
+          </p>
+            <div class="py-24 sm:py-32">
+              <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <div class="mx-auto grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-12 sm:max-w-xl sm:grid-cols-6 sm:gap-x-10 sm:gap-y-14 lg:mx-0 lg:max-w-none lg:grid-cols-5">
+                  <img class="col-span-2 max-h-12 w-full object-contain lg:col-span-1" src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Logo_of_the_Swiss_National_Supercomputing_Centre_CSCS.jpg" alt="CSCS" width="158" height="48">
+                  <img class="col-span-2 max-h-12 w-full object-contain lg:col-span-1" src="https://langfuse.com/langfuse_logo.svg" alt="Langfuse" width="158" height="48">
+                  <img class="col-span-2 max-h-12 w-full object-contain lg:col-span-1" src="https://ai.ethz.ch/about-us/how-to-find-us/media/_jcr_content/par/twocolumn/par_left/fullwidthimage/image.imageformat.930.1967967023.png" alt="Tuple" width="158" height="48">
+                </div>
+              </div>
+            </div>
+        </article>
+      </section>
+    </div>
+  </Container>
+</PageLayout>

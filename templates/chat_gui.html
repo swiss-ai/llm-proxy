@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swiss AI LLM Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="static/images/swiss-ai-logo-small.png">
+    <link rel="stylesheet" href="static/chat.css">
+    <!-- <script defer src="keys.js"></script> -->
+    <!-- For templates -->
+    <script>const API_KEY = "{{ apiKey }}";</script>
+    <script defer src="static/chat.js"></script>
+  </head>
+  <body>
+    <div id="appContainer">
+      <div id="header" class="responsive-header">
+        <h1>Swiss AI LLM Chat</h1>
+        <div class="model-selector">
+          <div class="custom-dropdown">
+            <!-- <select id="modelSelect"> --> 
+            <!--   <option value="">Loading models...</option> -->
+            <!-- </select> -->
+	    <!-- Templating: -->
+            <select id="modelSelect"> 
+	      {% for model in models %}
+	      <option value="{{ model }}">{{ model }}</option>
+	      {% endfor %}
+	    </select>
+          </div>
+        </div>
+      </div>
+      <div id="chatOutput" class="chat-history">
+        <!-- Chat messages will appear here -->
+      </div>
+      <form id="chatForm" action="javascript:void(0)">
+        <div class="input-container">
+          <input id="chatMessage" class="input-field" type="text" placeholder="Enter message..." name="usrnm">
+	  <button type="submit" id="sendBtn" class="btn"></button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

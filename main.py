@@ -2,27 +2,27 @@ import os
 import json
 import time
 import uuid
-import secrets
-import traceback
+import requests
 from urllib.parse import urlparse
-
 from sqlmodel import create_engine, Session, select
 from fastapi import FastAPI, Request, status, HTTPException, Depends
-from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request as StarletteRequest
+from fastapi.staticfiles import StaticFiles
+
 import llm as llm
-from utils import getenv, set_env_variables, get_all_models
-from user_utils import APIKey
+from utils import getenv, set_env_variables, get_all_models, get_online_models
+from user_utils import APIKey, get_or_create_apikey, rotate_key
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import PlainTextResponse
 
 
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
 ENDPOINT = urlparse(API_BASE)
-
 ENDPOINT = f"{ENDPOINT.scheme}://{ENDPOINT.netloc}/v1/dnt/table"
 master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-xzyao")
 PG_HOST = os.environ.get("PG_HOST", "sqlite:///./test.db")
@@ -32,6 +32,11 @@ app.add_middleware(SessionMiddleware, secret_key="some-random-string")
 templates = Jinja2Templates(directory="templates")
 engine = create_engine(PG_HOST)
 
+frontend_templates = Jinja2Templates(directory="static/dist")
+app.mount("/_astro", StaticFiles(directory="static/dist/_astro"), name="frontpage")
+app.mount("/static", StaticFiles(directory="static"), name="frontpage")
+
+known_keys = set()
 oauth = OAuth()
 
 oauth.register(
@@ -57,15 +62,21 @@ os.environ['OPENAI_API_KEY'] = "YOUR_API_KEY"
 ######## AUTH UTILITIES ################
 
 def user_api_key_auth(api_key: str = Depends(oauth2_scheme)):
+    global known_keys
     if api_key == master_key:
         return
-    with Session(engine) as session:
-        api_keys = session.exec(select(APIKey).where(APIKey.key == api_key)).all()
-    if len(api_keys) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": "invalid user key"},
-        )
+    if api_key in known_keys:
+        return
+    else:
+        with Session(engine) as session:
+            api_keys = session.exec(select(APIKey).where(APIKey.key == api_key)).all()
+            known_keys.update([x.key for x in api_keys])
+        if len(api_keys) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"error": "invalid user key"},
+            )
+        return
 
 def key_auth(api_key: str = Depends(oauth2_scheme)):
     if api_key != master_key:
@@ -87,8 +98,30 @@ def data_generator(response, generation):
             })
         yield f"data: {json.dumps(data)}\n\n"
 
-# for completion
+
 @app.post("/chat/completions", dependencies=[Depends(user_api_key_auth)])
+async def completion(request: Request):
+    key = request.headers.get("Authorization").replace("Bearer ", "")
+    data = await request.json()
+    data["user_key"] = key
+    data["master_key"] = master_key
+    if not os.getenv("DISABLE_TRACKING", "0") == "1":
+        data['trace_id'] = str(uuid.uuid4())
+    set_env_variables(data)
+    if 'stream' not in data:
+        data['stream'] = False
+    if type(data['stream']) == str:
+        if data['stream'].lower() == "true":
+            data['stream'] = True # convert to boolean
+    if data['stream']:
+        data['stream_options'] = {"include_usage": True}
+    response = llm.chat_completion(**data)
+    if 'stream' in data and data['stream'] == True:
+            return StreamingResponse(data_generator(response, response.generation), media_type='text/event-stream')
+    return response
+
+
+@app.post("/completions", dependencies=[Depends(user_api_key_auth)])
 async def completion(request: Request):
     key = request.headers.get("Authorization").replace("Bearer ", "")
     data = await request.json()
@@ -109,81 +142,44 @@ async def completion(request: Request):
             return StreamingResponse(data_generator(response, response.generation), media_type='text/event-stream')
     return response
 
+@app.get("/keys/rotation", dependencies=[Depends(user_api_key_auth)])
+def rotate_keys(request: Request):
+    key = request.headers.get("Authorization").replace("Bearer ", "")
+    try:
+        new_key = rotate_key(engine, key)
+        response = JSONResponse(content={"new_key": new_key.key})
+        response.set_cookie("rc_api_key", new_key.key)
+        return response
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": str(e)},
+        )    
+
 @app.get("/models")
 def model_list(): 
     available_models = get_all_models(endpoint=ENDPOINT)
     data = []
-    for model in available_models: 
-        data.append({
-            "id": model, 
-            "object": "model", 
-            "created": int(time.time()), 
-            "owned_by": "0x00"
-        })
+    for model in available_models:
+        if model not in [x['id'] for x in data]:
+            data.append({
+                "id": model, 
+                "object": "model", 
+                "created": int(time.time()), 
+                "owned_by": "0x00"
+            })
     return dict(
         data=data,
         object="list",
     )
     
-@app.get("/", response_class=HTMLResponse)
-async def terms_of_use(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
-
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
-######## KEY MANAGEMENT ################
-
-@app.post("/key/new", dependencies=[Depends(key_auth)])
-async def generate_key(request: Request):
-    try:
-        data = await request.json()
-        data.get("budget")
-    except:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-
-    budget = data["budget"]
-    api_key = f"sk-rc-{secrets.token_urlsafe(16)}"
-    user_key = APIKey(key=api_key, budget=budget)
-    try:
-        with Session(engine) as session:
-            session.add(user_key)
-            session.commit()
-            session.refresh(user_key)
-            
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return user_key
-
-@app.post("/keys", dependencies=[Depends(key_auth)])
-async def import_keys(request: Request):
-    try:
-        data = await request.json()
-        keys = data.get("keys")
-    except:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-
-    for key in keys:
-        user_key = APIKey(key=key["key"], budget=key["budget"])
-        try:
-            with Session(engine) as session:
-                session.add(user_key)
-                session.commit()
-                session.refresh(user_key)
-        except Exception as e:
-            traceback.print_exc()
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return {"status": "ok"}
-
 @app.get("/login")
 async def login(request: Request):
-    callback_addr = str(request.base_url)+"users/callbacks"
-    print(callback_addr)
+    callback_addr = f"{request.base_url}users/callbacks"
     return await oauth.auth0.authorize_redirect(
         request=request,
         redirect_uri=callback_addr,
@@ -195,29 +191,97 @@ async def callback(request: StarletteRequest):
     request.session['user'] = user
     response = RedirectResponse(url="/api_key")
     response.set_cookie("user", user['userinfo'])
-    return response
+    try:
+        return response
+    except Exception as e:
+        return {"error": "error"}
 
 @app.get("/api_key", response_class=HTMLResponse)
 async def get_api_key(request: Request):
     # retrieve the users
     user_info = request.cookies.get("user")
-    user_info = user_info.replace("\'", "\"")
-    user_info = json.loads(user_info)
-    if user_info['https://cilogon.org/idp_name'] in ['ETH Zurich', 'EPFL - EPF Lausanne']:
-        api_key = f"sk-rc-{secrets.token_urlsafe(16)}"
-        user_key = APIKey(key=api_key, budget=1000)
-        try:
-            with Session(engine) as session:
-                session.add(user_key)
-                session.commit()
-                session.refresh(user_key)
-        except Exception as e:
-            traceback.print_exc()
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    if not user_info:
+        return RedirectResponse(url="/login")
+    user_info = json.loads(user_info.replace("\'", "\""))
+    if user_info['https://cilogon.org/idp_name'] in [
+        'ETH Zurich', 
+        'EPFL - EPF Lausanne', 
+        'Universite de Lausanne', 
+        'Universität Bern', 
+        'University of Zurich'
+    ]:
+        user_key = get_or_create_apikey(engine=engine, owner_email=user_info['email']).key
     else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not authenticated!")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"User not authenticated! Your IDP is {user_info['https://cilogon.org/idp_name']}")
+    
+    available_models = get_all_models(endpoint=ENDPOINT)
+    response = templates.TemplateResponse("api_key.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models})
+    response.set_cookie("rc_api_key", user_key)
+    return response
 
-    return templates.TemplateResponse("api_key.html", {"request": request, "api_key": api_key, "user": user_info})
+@app.get("/metrics")
+def get_aggregated_metrics(request: Request):
+    online_models = get_online_models(endpoint=ENDPOINT)
+    # Fetch metrics for each online model
+    aggregated_metrics = []
+    for model in online_models:
+        try:
+            metrics_response = requests.get(model["metrics_url"])
+            if metrics_response.status_code == 200:
+                metrics_response = metrics_response.text
+                aggregated_metrics.append(metrics_response)
+            else:
+                print(f"err: {metrics_response.text}")
+        except Exception as e:
+            print(f"Error: {e}")
+            #aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model})\n# Failed to fetch metrics: {e}")
+    
+    # Combine metrics into a single response
+    metrics_output = "".join(aggregated_metrics)
+    return PlainTextResponse(
+        metrics_output,
+        media_type="text/plain",
+    )
+
+@app.get("/chat")
+async def chat(request: Request):
+    api_key = request.cookies.get("rc_api_key")
+    if not api_key:
+        return RedirectResponse(url="/login")
+    available_models = get_all_models(endpoint=ENDPOINT)
+    return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key, "models": available_models})
+
+@app.get("/metrics")
+def get_aggregated_metrics(request: Request):
+    online_models = get_online_models(endpoint=ENDPOINT)
+    # Fetch metrics for each online model
+    aggregated_metrics = []
+    for model in online_models:
+        try:
+            metrics_response = requests.get(model["metrics_url"])
+            if metrics_response.status_code == 200:
+                metrics_response = metrics_response.text
+                aggregated_metrics.append(metrics_response)
+            else:
+                print(f"err: {metrics_response.text}")
+        except Exception as e:
+            print(f"Error: {e}")
+            #aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model})\n# Failed to fetch metrics: {e}")
+    
+    # Combine metrics into a single response
+    metrics_output = "".join(aggregated_metrics)
+    return PlainTextResponse(
+        metrics_output,
+        media_type="text/plain",
+    )
+
+@app.get("/{rest_of_path:path}")
+async def homepage_app(req: Request, rest_of_path: str):
+    if rest_of_path.split("/")[0] in ['docs', 'articles']:
+        return frontend_templates.TemplateResponse(rest_of_path+"/index.html", { 'request': req })
+    return frontend_templates.TemplateResponse('index.html', { 'request': req })
+
+app.mount("/", StaticFiles(directory="static/dist", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

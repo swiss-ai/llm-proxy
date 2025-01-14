@@ -1,7 +1,6 @@
 import os
 import backoff
 import threading
-import uuid
 from typing import Dict
 from collections import defaultdict
 from protocol import ModelResponse
@@ -14,8 +13,6 @@ else:
     disable_tracking = False
     from langfuse.openai import openai
 
-cost_dict: Dict[str, Dict[str, float]] = defaultdict(dict)
-cost_dict_lock = threading.Lock()
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
 
 client = openai.OpenAI(
@@ -58,7 +55,7 @@ def handle_llm_exception(e: Exception):
     max_value=100,
     factor=1.5,
 )
-def completion(**kwargs) -> ModelResponse:
+def chat_completion(**kwargs) -> ModelResponse:
     user_key = kwargs.pop("user_key")
     master_key = kwargs.pop("master_key")
     def _completion():
@@ -85,6 +82,54 @@ def completion(**kwargs) -> ModelResponse:
                     kwargs.pop("session_id", None)
                     kwargs.pop("name", None)
                 response = client.chat.completions.create(**kwargs)
+            return response
+        except Exception as e:
+            handle_llm_exception(e) # this tries fallback requests
+    try:
+        return _completion()
+    except Exception as e:
+        raise e
+    
+@backoff.on_exception(
+    wait_gen=backoff.constant,
+    exception=RetryConstantError,
+    max_tries=3,
+    interval=3,
+)
+@backoff.on_exception(
+    wait_gen=backoff.expo,
+    exception=RetryExpoError,
+    jitter=backoff.full_jitter,
+    max_value=100,
+    factor=1.5,
+)
+def completion(**kwargs) -> ModelResponse:
+    user_key = kwargs.pop("user_key")
+    master_key = kwargs.pop("master_key")
+    def _completion():
+        try:
+            kwargs['name']="chat-generation"
+            if user_key == master_key:
+                # use as admin of the server
+                kwargs['user_id'] = user_key
+                if disable_tracking:
+                    kwargs.pop("trace_id", None)
+                    kwargs.pop("user_id", None)
+                    kwargs.pop("user_key", None)
+                    kwargs.pop("session_id", None)
+                    kwargs.pop("name", None)
+                response = client.completions.create(**kwargs)
+            else:
+                # for end user based rate limiting
+                # todo: budget control here
+                kwargs['user_id'] = user_key
+                if disable_tracking:
+                    kwargs.pop("trace_id", None)
+                    kwargs.pop("user_id", None)
+                    kwargs.pop("user_key", None)
+                    kwargs.pop("session_id", None)
+                    kwargs.pop("name", None)
+                response = client.completions.create(**kwargs)
             return response
         except Exception as e:
             handle_llm_exception(e) # this tries fallback requests

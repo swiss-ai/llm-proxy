@@ -14,21 +14,6 @@ data:
   LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
   LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: lb-proxy-service
-  labels:
-    app: lb-proxy-service
-spec:
-  type: LoadBalancer
-  ports:
-  - name: llm-http
-    port: 8080
-    targetPort: 8080
-  selector:
-    app: llm-proxy
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
