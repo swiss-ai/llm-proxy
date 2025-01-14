@@ -18,7 +18,13 @@ const articles = defineCollection({
     date: z.coerce.date(),
     draft: z.boolean().optional(),
     demoURL: z.string().optional(),
-    repoURL: z.string().optional()
+    repoURL: z.string().optional(),
+    // authors is a list of objects, which consists of name, url
+    // example: [{ name: "John Doe", url: "https://example.com" }]
+    authors: z.array(z.object({
+      name: z.string(),
+      url: z.string()
+    })).optional(),
   }),
 });
 

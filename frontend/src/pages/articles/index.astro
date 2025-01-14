@@ -8,6 +8,7 @@ import { ARTICLES } from "@consts";
 const projects = (await getCollection("articles"))
   .filter(project => !project.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+console.log(projects);
 ---
 
 <PageLayout title={ARTICLES.TITLE} description={ARTICLES.DESCRIPTION}>

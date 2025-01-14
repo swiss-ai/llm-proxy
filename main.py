@@ -208,7 +208,8 @@ async def get_api_key(request: Request):
         'EPFL - EPF Lausanne', 
         'Universite de Lausanne', 
         'Universität Bern', 
-        'University of Zurich'
+        'University of Zurich',
+        'FHNW - Fachhochschule Nordwestschweiz',
     ]:
         user_key = get_or_create_apikey(engine=engine, owner_email=user_info['email']).key
     else:
@@ -277,7 +278,7 @@ def get_aggregated_metrics(request: Request):
 
 @app.get("/{rest_of_path:path}")
 async def homepage_app(req: Request, rest_of_path: str):
-    if rest_of_path.split("/")[0] in ['docs', 'articles']:
+    if rest_of_path.split("/")[0] in ['docs', 'articles', 'guides']:
         return frontend_templates.TemplateResponse(rest_of_path+"/index.html", { 'request': req })
     return frontend_templates.TemplateResponse('index.html', { 'request': req })
 
