@@ -8,4 +8,7 @@ import svelte from "@astrojs/svelte";
 export default defineConfig({
   site: "https://fmapi.swissai.cscs.ch",
   integrations: [svelte(), mdx(), sitemap(), tailwind()],
+  experimental: {
+    svg: true,
+  },
 });
