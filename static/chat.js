@@ -107,7 +107,16 @@ window.onload = function () {
     
     // Hamburger menu for mobile
     const hamburgerMenu = document.getElementById("hamburgerMenu");
-    hamburgerMenu.addEventListener("click", toggleSidebar);
+    if (hamburgerMenu) {
+      hamburgerMenu.addEventListener("click", function() {
+        toggleSidebar();
+        // Prevent the event from propagating
+        return false;
+      });
+      console.log("Hamburger menu initialized");
+    } else {
+      console.error("Hamburger menu element not found!");
+    }
     
     // Close sidebar when clicking outside on mobile
     document.addEventListener("click", function(e) {
@@ -155,7 +164,13 @@ window.onload = function () {
 
   function toggleSidebar() {
     const sidebar = document.getElementById("chatSidebar");
-    sidebar.classList.toggle("show");
+    
+    // For mobile devices, toggle show class
+    if (window.innerWidth <= 768) {
+      sidebar.classList.toggle("show");
+      console.log("Toggle sidebar:", sidebar.classList.contains("show"));
+    }
+    // For desktop, we use hover effect via CSS, nothing to do here
   }
 
   function setupDragAndDrop() {
@@ -348,7 +363,17 @@ window.onload = function () {
     try {
       const savedChats = localStorage.getItem('chatHistory');
       if (savedChats) {
-        chats = JSON.parse(savedChats);
+        const loadedChats = JSON.parse(savedChats);
+        
+        // Filter out any empty chats
+        const nonEmptyChats = {};
+        Object.keys(loadedChats).forEach(chatId => {
+          if (loadedChats[chatId].messages && loadedChats[chatId].messages.length > 0) {
+            nonEmptyChats[chatId] = loadedChats[chatId];
+          }
+        });
+        
+        chats = nonEmptyChats;
         updateChatHistoryList();
         
         // Load most recent chat if exists
@@ -423,7 +448,9 @@ window.onload = function () {
       messages: []
     };
     
-    saveChatsToLocalStorage();
+    // Don't save empty chats to localStorage - it will be saved when a message is added
+    // saveChatsToLocalStorage();
+    
     updateChatHistoryList();
     chatOutputElem.innerHTML = '';
     
@@ -502,6 +529,12 @@ window.onload = function () {
     
     Object.keys(chats).forEach(chatId => {
       const chat = chats[chatId];
+      
+      // Skip empty chats (ones with no messages)
+      if (!chat.messages || chat.messages.length === 0) {
+        return;
+      }
+      
       chatsToSave[chatId] = {
         ...chat,
         // Filter out image data from messages but keep other properties
@@ -706,13 +739,18 @@ window.onload = function () {
     return container;
   }
 
-  // Function to render markdown and LaTeX
+  // Function to render markdown, LaTeX, and highlight code
   function renderMarkdownWithLatex(element, text) {
     // First render markdown
     element.innerHTML = marked.parse(text);
     
     // Then render LaTeX in the resulting HTML
     renderMathInCurrentElement(element);
+    
+    // Then highlight code blocks
+    if (window.Prism) {
+      Prism.highlightAllUnder(element);
+    }
   }
   
   // Function to render LaTeX in an element
@@ -800,7 +838,7 @@ window.onload = function () {
       let accumulatedText = "";
       let buffer = "";
       let lastRenderTime = 0;
-      const renderDebounceTime = 100; // ms
+      const renderDebounceTime = 150; // ms - increased to reduce flickering
       
       while (true) {
         const { value, done } = await reader.read();
@@ -825,6 +863,7 @@ window.onload = function () {
               // Debounce rendering to avoid excessive DOM updates
               const now = Date.now();
               if (now - lastRenderTime > renderDebounceTime) {
+                // Just do basic markdown during streaming for performance
                 aiMessageElem.innerHTML = marked.parse(accumulatedText);
                 lastRenderTime = now;
               }
@@ -835,9 +874,8 @@ window.onload = function () {
         }
       }
       
-      // Final render with complete text and LaTeX
-      aiMessageElem.innerHTML = marked.parse(accumulatedText);
-      renderMathInCurrentElement(aiMessageElem);
+      // Final render with complete text and full rendering
+      renderMarkdownWithLatex(aiMessageElem, accumulatedText);
       
       // Handle completed response
       if (isParallelRequest) {

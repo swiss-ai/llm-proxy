@@ -9,6 +9,23 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <!-- PrismJS for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-csharp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-tsx.min.js"></script>
     <script>
       // Initialize LaTeX rendering as soon as the KaTeX library is loaded
       document.addEventListener("DOMContentLoaded", function() {
@@ -32,6 +49,10 @@
             const chatOutput = document.getElementById('chatOutput');
             if (chatOutput) {
               window.renderMathInElement(chatOutput, window.katexOptions);
+              // Also highlight any code blocks
+              if (window.Prism) {
+                Prism.highlightAllUnder(chatOutput);
+              }
             }
           }, 500);
         }
@@ -41,15 +62,88 @@
     <link rel="icon" href="static/images/swiss-ai-logo-small.png">
     <link rel="stylesheet" href="static/chat.css">
     <!-- TEMPLATES -->
-    <!-- <script defer src="keys.js"></script> -->
+    <script defer src="keys.js"></script>
+    <script>
+      // Load apertus.json if no chat history exists
+      document.addEventListener('DOMContentLoaded', function() {
+        // Check if localStorage is empty or only contains an empty chat
+        const savedChats = localStorage.getItem('chatHistory');
+        let isEmpty = true;
+        
+        if (savedChats) {
+          try {
+            const chats = JSON.parse(savedChats);
+            const chatIds = Object.keys(chats);
+            
+            // Check if there's any chat with messages
+            for (const id of chatIds) {
+              if (chats[id].messages && chats[id].messages.length > 0) {
+                isEmpty = false;
+                break;
+              }
+            }
+            
+            // If only empty chats exist, remove them
+            if (isEmpty && chatIds.length > 0) {
+              localStorage.removeItem('chatHistory');
+            }
+          } catch (e) {
+            console.error('Error parsing chat history:', e);
+            localStorage.removeItem('chatHistory');
+          }
+        }
+        
+        // Load apertus.json if storage is empty or only had empty chats
+        if (!savedChats || isEmpty) {
+          // Server path (works with http server)
+          loadFile('apertus.json');
+          
+          // Alternative file path (helps with local file access)
+          setTimeout(function() {
+            // If we still don't have chat history after trying the first path
+            if (!localStorage.getItem('chatHistory')) {
+              loadFile('/apertus.json');
+            }
+          }, 100);
+          
+          // Function to load JSON file from server
+          function loadFile(filePath) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', filePath, true);
+            xhr.onload = function() {
+              if (xhr.status === 200) {
+                try {
+                  const data = JSON.parse(xhr.responseText);
+                  const chatId = 'chat_' + Date.now();
+                  const chat = {
+                    id: chatId,
+                    timestamp: new Date().toISOString(),
+                    dateCreated: data.dateCreated || new Date().toISOString(),
+                    modelName: data.modelName || "",
+                    messages: data.messages || []
+                  };
+                  const chats = { [chatId]: chat };
+                  localStorage.setItem('chatHistory', JSON.stringify(chats));
+                  // Reload page to show the loaded chat
+                  window.location.reload();
+                } catch (err) {
+                  console.error('Error processing JSON:', err);
+                }
+              }
+            };
+            xhr.onerror = function() {
+              console.error('Error loading JSON file:', filePath);
+            };
+            xhr.send();
+          }
+        }
+      });
+    </script>
     <!-- TEMPLATES -->
     <script>const API_KEY = "{{ apiKey }}";</script>
-    <script defer src="static/chat.js"></script>
+    <!-- <script defer src="static/chat.js"></script> -->
   </head>
   <body>
-    <button id="hamburgerMenu" class="hamburger-menu">
-      <i class="fas fa-bars"></i>
-    </button>
     <div id="appContainer">
       <div id="chatSidebar">
         <div class="sidebar-header">
@@ -65,7 +159,7 @@
         </div>
         <div class="new-chat-container">
           <button id="newChatBtn" class="new-chat-btn">
-            <i class="fas fa-plus"></i> New Chat
+            <i class="fas fa-plus"></i> <span>New Chat</span>
           </button>
           <button id="importChatBtn" class="import-btn" title="Import chat">
             <i class="fas fa-file-import"></i>
@@ -81,6 +175,9 @@
           <!-- OFFLINETEST -->
           <!-- <h1>Swiss AI LLM Chat <span>(Offline Test Mode)</span></h1>  -->
           <!-- OFFLINETEST -->
+          <button id="hamburgerMenu" class="hamburger-menu" data-action="toggle-sidebar" onclick="document.getElementById('chatSidebar').classList.toggle('show');return false;">
+            <i class="fas fa-bars"></i>
+          </button>
           <div class="header-left">
             <h1>Swiss AI LLM Chat</h1>
             <button id="exportChatBtn" class="export-btn" title="Export current chat">
@@ -103,6 +200,7 @@
         </div>
         <form id="chatForm" action="javascript:void(0)">
           <div class="input-container">
+            <!-- Incredible Ancient Technology Lost to Time -->
             <button type="button" id="parallelBtn" class="parallel-btn" title="Get parallel responses">
               <i class="fas fa-random"></i>
             </button>
@@ -114,7 +212,7 @@
               <input type="file" id="imageFileInput" accept="image/*" multiple style="display: none;">
             </div>
             <button type="submit" id="sendBtn" class="btn">
-              <i class="fas fa-paper-plane"></i>
+              <i class="fas fa-arrow-right"></i>
             </button>
           </div>
         </form>
