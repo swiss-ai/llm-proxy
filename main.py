@@ -13,8 +13,8 @@ from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request as StarletteRequest
 from fastapi.staticfiles import StaticFiles
-
 import llm as llm
+from typing import Optional
 from utils import getenv, set_env_variables, get_all_models, get_online_models
 from user_utils import APIKey, get_or_create_apikey, rotate_key
 from fastapi.templating import Jinja2Templates
@@ -102,9 +102,17 @@ def data_generator(response, generation):
 @app.post("/chat/completions", dependencies=[Depends(user_api_key_auth)])
 async def completion(request: Request):
     key = request.headers.get("Authorization").replace("Bearer ", "")
+    disable_tracking = request.headers.get("X-Disable-Tracking", "0") == "1"
     data = await request.json()
+    model = data.get("model", None)
+    if model is None:
+        return JSONResponse(content={"error": "model is required"}, status_code=400)
+    if model not in get_all_models(endpoint=ENDPOINT):
+        return JSONResponse(content={"error": f"model {model} not available"}, status_code=400)
+    
     data["user_key"] = key
     data["master_key"] = master_key
+    data["disable_tracking"] = disable_tracking
     if not os.getenv("DISABLE_TRACKING", "0") == "1":
         data['trace_id'] = str(uuid.uuid4())
     set_env_variables(data)
@@ -123,10 +131,12 @@ async def completion(request: Request):
 
 @app.post("/completions", dependencies=[Depends(user_api_key_auth)])
 async def completion(request: Request):
+    disable_tracking = request.headers.get("X-Disable-Tracking", "0") == "1"
     key = request.headers.get("Authorization").replace("Bearer ", "")
     data = await request.json()
     data["user_key"] = key
     data["master_key"] = master_key
+    data["disable_tracking"] = disable_tracking
     if not os.getenv("DISABLE_TRACKING", "0") == "1":
         data['trace_id'] = str(uuid.uuid4())
     set_env_variables(data)
@@ -216,7 +226,11 @@ async def get_api_key(request: Request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"User not authenticated! Your IDP is {user_info['https://cilogon.org/idp_name']}")
     
     available_models = get_all_models(endpoint=ENDPOINT)
-    response = templates.TemplateResponse("api_key.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models})
+    if len(available_models) > 0:
+        demo_model = available_models[0]
+    else:
+        demo_model = "[YOUR_MODEL_NAME]"
+    response = templates.TemplateResponse("api_key.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models, "demo_model": demo_model})
     response.set_cookie("rc_api_key", user_key)
     return response
 
@@ -251,6 +265,36 @@ async def chat(request: Request):
         return RedirectResponse(url="/login")
     available_models = get_all_models(endpoint=ENDPOINT)
     return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key, "models": available_models})
+
+@app.get("/stats")
+def get_statistics(api_key: str | None = None):
+    # take api_key as an optional query parameter in the url
+    lf_endpoint = "https://cloud.langfuse.com/api/public/metrics/daily"
+    if api_key is not None:
+        lf_endpoint += f"?userId={api_key}"
+    # Basic authentication credentials
+    username = os.getenv("LANGFUSE_PUBLIC_KEY")
+    password = os.getenv("LANGFUSE_SECRET_KEY")
+    data = {"known_keys": len(known_keys)}
+    try:
+        # Make API request with basic authentication
+        response = requests.get(lf_endpoint, auth=(username, password))
+        # Check if request was successful
+        response.raise_for_status()
+        # Parse and print the JSON response
+        data = response.json()
+        print("API Response:")
+        print(data)
+        
+    except requests.exceptions.HTTPError as errh:
+        print(f"HTTP Error: {errh}")
+    except requests.exceptions.ConnectionError as errc:
+        print(f"Error Connecting: {errc}")
+    except requests.exceptions.Timeout as errt:
+        print(f"Timeout Error: {errt}")
+    except requests.exceptions.RequestException as err:
+        print(f"Error: {err}")
+    return data
 
 @app.get("/metrics")
 def get_aggregated_metrics(request: Request):

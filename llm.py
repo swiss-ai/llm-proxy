@@ -5,6 +5,7 @@ from typing import Dict
 from collections import defaultdict
 from protocol import ModelResponse
 from errors import RetryConstantError, RetryExpoError, UnknownLLMError
+import openai as oai
 if os.getenv("DISABLE_TRACKING", "0") == "1":
     print("Tracking is disabled")
     disable_tracking = True
@@ -14,6 +15,8 @@ else:
     from langfuse.openai import openai
 
 API_BASE=os.environ.get("RC_API_BASE", "http://140.238.223.13:8092/v1/service/llm/v1")
+os.environ["OPENAI_API_KEY"] = os.getenv("RC_VLLM_API_KEY", "YOUR_API_KEY")
+os.environ["OPENAI_BASE_URL"] = API_BASE
 
 client = openai.OpenAI(
     api_key=os.getenv("RC_VLLM_API_KEY", "YOUR_API_KEY"),
@@ -58,6 +61,11 @@ def handle_llm_exception(e: Exception):
 def chat_completion(**kwargs) -> ModelResponse:
     user_key = kwargs.pop("user_key")
     master_key = kwargs.pop("master_key")
+    disable_tracking = kwargs.pop("disable_tracking")
+    if disable_tracking:
+        client = oai
+    else:
+        client = openai
     def _completion():
         try:
             kwargs['name']="chat-generation"
@@ -106,6 +114,11 @@ def chat_completion(**kwargs) -> ModelResponse:
 def completion(**kwargs) -> ModelResponse:
     user_key = kwargs.pop("user_key")
     master_key = kwargs.pop("master_key")
+    disable_tracking = kwargs.pop("disable_tracking")
+    if disable_tracking:
+        client = oai
+    else:
+        client = openai
     def _completion():
         try:
             kwargs['name']="chat-generation"

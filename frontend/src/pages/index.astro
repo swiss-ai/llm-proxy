@@ -45,14 +45,6 @@ const articles = (await getCollection("articles"))
         </article>
       </section>
       <section>
-        <p class="animate dark:text-white">
-          Models currently available on the platform:
-        </p>
-        <div class="animate space-y-4">
-          <ModelList client:load />
-        </div>
-      </section>
-      <section>
         <!-- CTA Buttons -->
         <div class="flex flex-wrap gap-4 animate">
           <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -61,6 +53,14 @@ const articles = (await getCollection("articles"))
           <button class="bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             <a href="/chat">Chat</a>
           </button>
+      </section>
+      <section>
+        <p class="animate dark:text-white">
+          Models currently available on the platform:
+        </p>
+        <div class="animate space-y-4">
+          <ModelList client:load />
+        </div>
       </section>
       <section class="animate space-y-6">
         <div class="flex flex-wrap gap-y-2 items-center justify-between">
