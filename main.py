@@ -266,9 +266,11 @@ async def chat(request: Request):
     available_models = get_all_models(endpoint=ENDPOINT)
     return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key, "models": available_models})
 
-@app.get("/stats")
-def get_statistics(api_key: str | None = None):
-    # take api_key as an optional query parameter in the url
+@app.post("/stats")
+async def get_statistics(request: Request):
+    # Parse request body for api_key
+    data = await request.json()
+    api_key = data.get("api_key", None)
     lf_endpoint = "https://cloud.langfuse.com/api/public/metrics/daily"
     if api_key is not None:
         lf_endpoint += f"?userId={api_key}"
