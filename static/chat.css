@@ -106,11 +106,33 @@ body {
     box-shadow: 0 0 20px rgba(0,0,0,0.1);
     transition: left 0.3s ease;
     background-color: #fafafa;
+    display: flex;
   }
   
   #chatSidebar.show {
     left: 0;
-    display: flex;
+  }
+  
+  /* Create a simple overlay when sidebar is shown */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1300;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+  }
+  
+  #chatSidebar.show ~ body::after {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
   
   #chatMain {
@@ -907,7 +929,7 @@ p {
 }
 
 .hamburger-menu:hover {
-  background-color: #f8f8f8;
+  background-color: #f0f0f0;
 }
 
 .hamburger-menu i {

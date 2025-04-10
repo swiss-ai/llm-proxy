@@ -62,7 +62,6 @@
     <link rel="icon" href="static/images/swiss-ai-logo-small.png">
     <link rel="stylesheet" href="static/chat.css">
     <!-- TEMPLATES -->
-    <!-- <script defer src="static/keys.js"></script> -->
     <script>
       // Load apertus.json if no chat history exists
       document.addEventListener('DOMContentLoaded', function() {
@@ -140,12 +139,13 @@
       });
     </script>
     <!-- TEMPLATES -->
+    <!-- <script defer src="keys.js"></script> -->
     <script>const API_KEY = "{{ apiKey }}";</script>
     <script defer src="static/chat.js"></script>
   </head>
   <body>
     <div id="appContainer">
-      <div id="chatSidebar">
+      <div id="chatSidebar" onclick="event.stopPropagation();">
         <div class="sidebar-header">
           <div class="history-title">
             <h2>History</h2>
@@ -175,7 +175,8 @@
           <!-- OFFLINETEST -->
           <!-- <h1>Swiss AI LLM Chat <span>(Offline Test Mode)</span></h1>  -->
           <!-- OFFLINETEST -->
-          <button id="hamburgerMenu" class="hamburger-menu" data-action="toggle-sidebar" onclick="document.getElementById('chatSidebar').classList.toggle('show');return false;">
+          <button id="hamburgerMenu" class="hamburger-menu" 
+                  onclick="event.stopPropagation(); document.getElementById('chatSidebar').classList.toggle('show');">
             <i class="fas fa-bars"></i>
           </button>
           <div class="header-left">

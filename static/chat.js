@@ -40,6 +40,21 @@ window.onload = function () {
   // setupTestModel(); // OFFLINETEST
   loadChatHistory();
   initEventListeners();
+  
+  // Setup close sidebar when clicking outside
+  document.addEventListener("click", function(e) {
+    const sidebar = document.getElementById("chatSidebar");
+    const hamburger = document.getElementById("hamburgerMenu");
+    
+    if (window.innerWidth <= 768 && sidebar && hamburger) {
+      if (sidebar.classList.contains("show") && 
+          !sidebar.contains(e.target) && 
+          e.target !== hamburger && 
+          !hamburger.contains(e.target)) {
+        sidebar.classList.remove("show");
+      }
+    }
+  });
 
   // Setup keyboard event listeners for focusing on input field
   document.addEventListener('keydown', function(e) {
@@ -105,32 +120,6 @@ window.onload = function () {
       }
     });
     
-    // Hamburger menu for mobile
-    const hamburgerMenu = document.getElementById("hamburgerMenu");
-    if (hamburgerMenu) {
-      hamburgerMenu.addEventListener("click", function() {
-        toggleSidebar();
-        // Prevent the event from propagating
-        return false;
-      });
-      console.log("Hamburger menu initialized");
-    } else {
-      console.error("Hamburger menu element not found!");
-    }
-    
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener("click", function(e) {
-      const sidebar = document.getElementById("chatSidebar");
-      const hamburger = document.getElementById("hamburgerMenu");
-      
-      if (window.innerWidth <= 768 && 
-          !sidebar.contains(e.target) && 
-          e.target !== hamburger && 
-          !hamburger.contains(e.target)) {
-        sidebar.classList.remove("show");
-      }
-    });
-    
     // Image upload button
     const imageUploadBtn = document.getElementById("imageUploadBtn");
     const imageFileInput = document.getElementById("imageFileInput");
@@ -160,17 +149,6 @@ window.onload = function () {
 
     // Setup drag and drop for images
     setupDragAndDrop();
-  }
-
-  function toggleSidebar() {
-    const sidebar = document.getElementById("chatSidebar");
-    
-    // For mobile devices, toggle show class
-    if (window.innerWidth <= 768) {
-      sidebar.classList.toggle("show");
-      console.log("Toggle sidebar:", sidebar.classList.contains("show"));
-    }
-    // For desktop, we use hover effect via CSS, nothing to do here
   }
 
   function setupDragAndDrop() {
