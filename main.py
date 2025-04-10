@@ -275,7 +275,6 @@ def get_statistics(api_key: str | None = None):
     # Basic authentication credentials
     username = os.getenv("LANGFUSE_PUBLIC_KEY")
     password = os.getenv("LANGFUSE_SECRET_KEY")
-    data = {"known_keys": len(known_keys)}
     try:
         # Make API request with basic authentication
         response = requests.get(lf_endpoint, auth=(username, password))
@@ -283,9 +282,6 @@ def get_statistics(api_key: str | None = None):
         response.raise_for_status()
         # Parse and print the JSON response
         data = response.json()
-        print("API Response:")
-        print(data)
-        
     except requests.exceptions.HTTPError as errh:
         print(f"HTTP Error: {errh}")
     except requests.exceptions.ConnectionError as errc:
