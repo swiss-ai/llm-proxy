@@ -62,7 +62,7 @@
     <link rel="icon" href="static/images/swiss-ai-logo-small.png">
     <link rel="stylesheet" href="static/chat.css">
     <!-- TEMPLATES -->
-    <script defer src="keys.js"></script>
+    <script defer src="static/keys.js"></script>
     <script>
       // Load apertus.json if no chat history exists
       document.addEventListener('DOMContentLoaded', function() {
@@ -102,7 +102,7 @@
           setTimeout(function() {
             // If we still don't have chat history after trying the first path
             if (!localStorage.getItem('chatHistory')) {
-              loadFile('/apertus.json');
+              loadFile('/static/apertus.json');
             }
           }, 100);
           
@@ -141,7 +141,7 @@
     </script>
     <!-- TEMPLATES -->
     <script>const API_KEY = "{{ apiKey }}";</script>
-    <!-- <script defer src="static/chat.js"></script> -->
+    <script defer src="static/chat.js"></script>
   </head>
   <body>
     <div id="appContainer">
