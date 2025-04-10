@@ -5,41 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swiss AI LLM Chat</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <script>
+      // Initialize LaTeX rendering as soon as the KaTeX library is loaded
+      document.addEventListener("DOMContentLoaded", function() {
+        if (typeof renderMathInElement === 'function') {
+          window.renderMathInElement = renderMathInElement;
+          
+          // Define the default options for LaTeX rendering
+          window.katexOptions = {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false,
+            output: 'html'
+          };
+          
+          // After chat loads, render any existing math
+          setTimeout(function() {
+            const chatOutput = document.getElementById('chatOutput');
+            if (chatOutput) {
+              window.renderMathInElement(chatOutput, window.katexOptions);
+            }
+          }, 500);
+        }
+      });
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="static/images/swiss-ai-logo-small.png">
     <link rel="stylesheet" href="static/chat.css">
+    <!-- TEMPLATES -->
     <!-- <script defer src="keys.js"></script> -->
-    <!-- For templates -->
+    <!-- TEMPLATES -->
     <script>const API_KEY = "{{ apiKey }}";</script>
     <script defer src="static/chat.js"></script>
   </head>
   <body>
+    <button id="hamburgerMenu" class="hamburger-menu">
+      <i class="fas fa-bars"></i>
+    </button>
     <div id="appContainer">
-      <div id="header" class="responsive-header">
-        <h1>Swiss AI LLM Chat</h1>
-        <div class="model-selector">
-          <div class="custom-dropdown">
-            <!-- <select id="modelSelect"> --> 
-            <!--   <option value="">Loading models...</option> -->
-            <!-- </select> -->
-	    <!-- Templating: -->
-            <select id="modelSelect"> 
-	      {% for model in models %}
-	      <option value="{{ model }}">{{ model }}</option>
-	      {% endfor %}
-	    </select>
+      <div id="chatSidebar">
+        <div class="sidebar-header">
+          <div class="history-title">
+            <h2>History</h2>
+            <div id="historyTooltip" class="info-icon" title="Images are not saved. All history of chats is stored locally in the browser.">
+              <i class="fas fa-info-circle"></i>
+            </div>
+          </div>
+          <button id="clearHistoryBtn" class="clear-history-btn" title="Clear all history">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="new-chat-container">
+          <button id="newChatBtn" class="new-chat-btn">
+            <i class="fas fa-plus"></i> New Chat
+          </button>
+          <button id="importChatBtn" class="import-btn" title="Import chat">
+            <i class="fas fa-file-import"></i>
+          </button>
+          <input type="file" id="importChatInput" accept=".json">
+        </div>
+        <div id="chatHistoryList">
+          <!-- Chat history entries will appear here -->
+        </div>
+      </div>
+      <div id="chatMain">
+        <div id="header" class="responsive-header">
+          <!-- OFFLINETEST -->
+          <!-- <h1>Swiss AI LLM Chat <span>(Offline Test Mode)</span></h1>  -->
+          <!-- OFFLINETEST -->
+          <div class="header-left">
+            <h1>Swiss AI LLM Chat</h1>
+            <button id="exportChatBtn" class="export-btn" title="Export current chat">
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+          <div class="model-selector">
+            <div class="custom-dropdown">
+              <select id="modelSelect"> 
+                <option value="">Loading models...</option>
+              </select>
+            </div>
+            <button id="refreshModelsBtn" class="refresh-models-btn" title="Refresh models list">
+              <i class="fas fa-sync-alt"></i>
+            </button>
           </div>
         </div>
-      </div>
-      <div id="chatOutput" class="chat-history">
-        <!-- Chat messages will appear here -->
-      </div>
-      <form id="chatForm" action="javascript:void(0)">
-        <div class="input-container">
-          <input id="chatMessage" class="input-field" type="text" placeholder="Enter message..." name="usrnm">
-	  <button type="submit" id="sendBtn" class="btn"></button>
+        <div id="chatOutput" class="chat-history">
+          <!-- Chat messages will appear here -->
         </div>
-      </form>
+        <form id="chatForm" action="javascript:void(0)">
+          <div class="input-container">
+            <button type="button" id="parallelBtn" class="parallel-btn" title="Get parallel responses">
+              <i class="fas fa-random"></i>
+            </button>
+            <div class="message-input-wrapper">
+              <input id="chatMessage" class="input-field" type="text" placeholder="Enter message..." name="usrnm">
+              <button type="button" id="imageUploadBtn" class="image-upload-btn" title="Upload image">
+                <i class="fas fa-image"></i>
+              </button>
+              <input type="file" id="imageFileInput" accept="image/*" multiple style="display: none;">
+            </div>
+            <button type="submit" id="sendBtn" class="btn">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </body>
 </html>
