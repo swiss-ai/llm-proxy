@@ -62,7 +62,7 @@
     <link rel="icon" href="static/images/swiss-ai-logo-small.png">
     <link rel="stylesheet" href="static/chat.css">
     <!-- TEMPLATES -->
-    <script defer src="static/keys.js"></script>
+    <!-- <script defer src="static/keys.js"></script> -->
     <script>
       // Load apertus.json if no chat history exists
       document.addEventListener('DOMContentLoaded', function() {
@@ -96,13 +96,13 @@
         // Load apertus.json if storage is empty or only had empty chats
         if (!savedChats || isEmpty) {
           // Server path (works with http server)
-          loadFile('apertus.json');
+          loadFile('/static/apertus.json');
           
           // Alternative file path (helps with local file access)
           setTimeout(function() {
             // If we still don't have chat history after trying the first path
             if (!localStorage.getItem('chatHistory')) {
-              loadFile('/static/apertus.json');
+              loadFile('apertus.json');
             }
           }, 100);
           
