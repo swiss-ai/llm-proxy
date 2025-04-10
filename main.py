@@ -269,8 +269,12 @@ async def chat(request: Request):
 @app.post("/stats")
 async def get_statistics(request: Request):
     # Parse request body for api_key
-    data = await request.json()
-    api_key = data.get("api_key", None)
+    api_key = None
+    try:
+        data = await request.json()
+        api_key = data.get("api_key", None)
+    except Exception as e:
+        pass
     lf_endpoint = "https://cloud.langfuse.com/api/public/metrics/daily"
     if api_key is not None:
         lf_endpoint += f"?userId={api_key}"
