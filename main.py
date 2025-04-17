@@ -14,7 +14,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request as StarletteRequest
 from fastapi.staticfiles import StaticFiles
 import llm as llm
-from typing import Optional
 from utils import getenv, set_env_variables, get_all_models, get_online_models
 from user_utils import APIKey, get_or_create_apikey, rotate_key
 from fastapi.templating import Jinja2Templates
@@ -28,7 +27,6 @@ master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-x
 PG_HOST = os.environ.get("PG_HOST", "sqlite:///./test.db")
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key="some-random-string")
 templates = Jinja2Templates(directory="templates")
 engine = create_engine(PG_HOST)
 
@@ -46,8 +44,10 @@ oauth.register(
     client_kwargs={
         "scope": "openid profile email",
     },
-    server_metadata_url=f'https://{os.environ.get("AUTH0_DOMAIN")}/.well-known/openid-configuration'
+    server_metadata_url=f'https://{os.environ.get("AUTH0_DOMAIN")}/.well-known/openid-configuration',
+    authorize_state=os.environ.get("AUTH0_CLIENT_SECRET", "some-random-string"),
 )
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("AUTH0_CLIENT_SECRET", "some-random-string"))
 
 app.add_middleware(
     CORSMiddleware,
@@ -83,7 +83,6 @@ def key_auth(api_key: str = Depends(oauth2_scheme)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": "invalid admin key"},
-            # TODO: this will be {'detail': {'error': 'something'}}
         )
 
 ######## CHAT COMPLETIONS ################
@@ -199,6 +198,7 @@ async def login(request: Request):
 async def callback(request: StarletteRequest):
     user = await oauth.auth0.authorize_access_token(request=request)
     request.session['user'] = user
+    print(request.url.path)
     response = RedirectResponse(url="/api_key")
     response.set_cookie("user", user['userinfo'])
     try:
@@ -211,7 +211,7 @@ async def get_api_key(request: Request):
     # retrieve the users
     user_info = request.cookies.get("user")
     if not user_info:
-        return RedirectResponse(url="/login")
+        return RedirectResponse(url="/login?next=/api_key")
     user_info = json.loads(user_info.replace("\'", "\""))
     if user_info['https://cilogon.org/idp_name'] in [
         'ETH Zurich', 
@@ -223,7 +223,9 @@ async def get_api_key(request: Request):
     ]:
         user_key = get_or_create_apikey(engine=engine, owner_email=user_info['email']).key
     else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"User not authenticated! Your IDP is {user_info['https://cilogon.org/idp_name']}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"User not authenticated! Your IDP is {user_info['https://cilogon.org/idp_name']}")
     
     available_models = get_all_models(endpoint=ENDPOINT)
     if len(available_models) > 0:
@@ -249,7 +251,6 @@ def get_aggregated_metrics(request: Request):
                 print(f"err: {metrics_response.text}")
         except Exception as e:
             print(f"Error: {e}")
-            #aggregated_metrics.append(f"# Metrics for model {model['model_name']} (ID: {model})\n# Failed to fetch metrics: {e}")
     
     # Combine metrics into a single response
     metrics_output = "".join(aggregated_metrics)
@@ -262,7 +263,7 @@ def get_aggregated_metrics(request: Request):
 async def chat(request: Request):
     api_key = request.cookies.get("rc_api_key")
     if not api_key:
-        return RedirectResponse(url="/login")
+        return RedirectResponse(url="/login?next=/chat")
     available_models = get_all_models(endpoint=ENDPOINT)
     return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key, "models": available_models})
 
