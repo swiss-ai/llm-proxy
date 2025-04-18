@@ -61,27 +61,25 @@ window.onload = function () {
     // If a key a-zA-Z0-9 is pressed and not in an input field, focus on chat message input
     const key = e.key;
     const isAlphaNumeric = /^[a-zA-Z0-9]$/.test(key);
-    const notInInput = !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+    const notInInput = !['INPUT', 'TEXTAREA', 'DIV'].includes(document.activeElement.tagName) || 
+                       (document.activeElement.tagName === 'DIV' && document.activeElement.id !== 'chatMessage');
     const noModifiers = !(e.altKey || e.ctrlKey || e.metaKey || e.shiftKey);
     
     if (isAlphaNumeric && notInInput && noModifiers) {
       chatMessageElem.focus();
-      // Add the typed character to the input field
-      chatMessageElem.value += key;
       
-      // Set cursor position to end
-      const len = chatMessageElem.value.length;
-      chatMessageElem.setSelectionRange(len, len);
+      // For contenteditable, we need to use selection and range
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(chatMessageElem);
+      range.collapse(false); // Move to end
+      selection.removeAllRanges();
+      selection.addRange(range);
       
-      // Prevent default to avoid typing the character twice
+      // We don't add the typed character for contenteditable - it will happen naturally
       e.preventDefault();
     }
   });
-
-  // OFFLINETEST - mock model selection.
-  // function setupTestModel() { 
-  //   modelSelectElem.innerHTML = `<option value="gpt-4o-mini">gpt-4o-mini</option>`; 
-  // } 
 
   function initEventListeners() {
     // Send message button
@@ -149,6 +147,24 @@ window.onload = function () {
 
     // Setup drag and drop for images
     setupDragAndDrop();
+
+    // Handle contenteditable div for chat input
+    chatMessageElem.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      } else {
+        adjustInputHeight();
+      }
+    });
+    
+    // Handle input and resize
+    chatMessageElem.addEventListener('input', adjustInputHeight);
+    
+    // Initialize with single line height
+    setTimeout(() => {
+      adjustInputHeight();
+    }, 0);
   }
 
   function setupDragAndDrop() {
@@ -398,13 +414,47 @@ window.onload = function () {
       const dateStr = new Date(chat.timestamp).toLocaleString();
       
       chatItem.innerHTML = `
-        <p>${chatTitle}</p>
-        <div class="timestamp">${dateStr}</div>
+        <div class="chat-item-content">
+          <p>${chatTitle}</p>
+          <div class="timestamp">${dateStr}</div>
+        </div>
+        <button class="delete-chat-btn" title="Delete this chat">
+          <i class="fas fa-trash"></i>
+        </button>
       `;
       
-      chatItem.addEventListener('click', () => loadChat(chatId));
+      chatItem.addEventListener('click', (e) => {
+        // Only load chat if not clicking the delete button
+        if (!e.target.closest('.delete-chat-btn')) {
+          loadChat(chatId);
+        }
+      });
+
+      // Add delete button handler
+      const deleteBtn = chatItem.querySelector('.delete-chat-btn');
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent chat loading
+        if (confirm('Are you sure you want to delete this chat?')) {
+          deleteChat(chatId);
+        }
+      });
+      
       chatHistoryListElem.appendChild(chatItem);
     });
+  }
+
+  function deleteChat(chatId) {
+    // Remove chat from storage
+    delete chats[chatId];
+    
+    // If we're deleting the current chat, create a new one
+    if (chatId === currentChatId) {
+      createNewChat();
+    }
+    
+    // Save changes and update UI
+    saveChatsToLocalStorage();
+    updateChatHistoryList();
   }
 
   function createNewChat() {
@@ -425,10 +475,7 @@ window.onload = function () {
       modelName: modelSelectElem.value || "",
       messages: []
     };
-    
-    // Don't save empty chats to localStorage - it will be saved when a message is added
-    // saveChatsToLocalStorage();
-    
+        
     updateChatHistoryList();
     chatOutputElem.innerHTML = '';
     
@@ -436,6 +483,10 @@ window.onload = function () {
     updateModelIndicator();
     
     imageAttachments = [];
+    
+    // Reset input
+    chatMessageElem.innerHTML = "";
+    adjustInputHeight();
     
     // Focus on input field
     chatMessageElem.focus();
@@ -465,6 +516,10 @@ window.onload = function () {
       
       // Update active state in history list
       updateChatHistoryList();
+      
+      // Reset input height
+      chatMessageElem.innerHTML = "";
+      adjustInputHeight();
       
       // Update model selector to match the chat's model if it exists
       if (chats[chatId].modelName) {
@@ -536,9 +591,9 @@ window.onload = function () {
   }
 
   function handleSendMessage() {
-    // Get message from input field
-    const message = chatMessageElem.value.trim();
-    if (!message) return;
+    // Get message from contenteditable div instead of textarea
+    const message = chatMessageElem.innerHTML.trim();
+    if (!message && imageAttachments.length === 0) return;
     
     // Check if there are parallel responses in progress
     if (document.querySelector('.parallel-container')) {
@@ -564,14 +619,20 @@ window.onload = function () {
     chats[currentChatId].modelName = selectedModel;
     updateModelIndicator();
     
+    // Convert <div><br></div> to proper line breaks before display
+    const processedMessage = message.replace(/<div><br><\/div>/g, '\n').replace(/<div>/g, '\n').replace(/<br>/g, '\n').replace(/<\/div>/g, '');
+    const textMessage = processedMessage.replace(/<[^>]*>/g, '');
+    
     // Add the user message to chat
-    generateUserChatBubble(message, imageAttachments.length > 0);
+    generateUserChatBubble(textMessage, imageAttachments.length > 0);
     
     // Clear the input field
-    chatMessageElem.value = "";
+    chatMessageElem.innerHTML = "";
+    // Reset height to default
+    adjustInputHeight();
     
     // Add the message to the chat history
-    chats[currentChatId].messages.push({ role: 'user', content: message.trim() });
+    chats[currentChatId].messages.push({ role: 'user', content: textMessage.trim() });
     chats[currentChatId].timestamp = new Date().toISOString();
     
     // Save chats to localStorage
@@ -587,7 +648,7 @@ window.onload = function () {
     chatOutputElem.scrollTop = chatOutputElem.scrollHeight;
 
     // Send the message to the API and process the response
-    sendMessage(message, selectedModel, function() { return aiMessageElem; });
+    sendMessage(textMessage, selectedModel, function() { return aiMessageElem; });
     
     // Clear any image attachments
     imageAttachments = [];
@@ -612,12 +673,12 @@ window.onload = function () {
       // If we have current image attachments, show them
       if (imageAttachments.length > 0) {
         // Add each image from current attachments
-      imageAttachments.forEach(img => {
-        const imgElement = document.createElement('img');
-        imgElement.src = img.data;
-        imgElement.alt = 'User uploaded image';
-        imagePreviewsDiv.appendChild(imgElement);
-      });
+        imageAttachments.forEach(img => {
+          const imgElement = document.createElement('img');
+          imgElement.src = img.data;
+          imgElement.alt = 'User uploaded image';
+          imagePreviewsDiv.appendChild(imgElement);
+        });
       } 
       // If we have lastSentImages, use them (for newly sent messages)
       else if (lastSentImages.length > 0) {
@@ -630,29 +691,6 @@ window.onload = function () {
         });
         // Clear lastSentImages after using them
         lastSentImages = [];
-      }
-      // For historical messages, show placeholders
-      else {
-        // Add placeholders for historical images
-        for (let i = 0; i < 3; i++) {
-          const imgPlaceholder = document.createElement('div');
-          imgPlaceholder.className = 'image-placeholder';
-          imgPlaceholder.style.width = '30px';
-          imgPlaceholder.style.height = '30px';
-          imgPlaceholder.style.backgroundColor = 'rgba(0,0,0,0.1)';
-          imgPlaceholder.style.borderRadius = '5px';
-          imgPlaceholder.style.display = 'flex';
-          imgPlaceholder.style.alignItems = 'center';
-          imgPlaceholder.style.justifyContent = 'center';
-          
-          const icon = document.createElement('i');
-          icon.className = 'fas fa-image';
-          icon.style.color = 'rgba(0,0,0,0.5)';
-          icon.style.fontSize = '16px';
-          
-          imgPlaceholder.appendChild(icon);
-          imagePreviewsDiv.appendChild(imgPlaceholder);
-        }
       }
       
       container.appendChild(imagePreviewsDiv);
@@ -680,9 +718,16 @@ window.onload = function () {
       const cleanMessage = messageText.replace(/\[\d+ images? attached\]/g, '').trim();
       
       if (cleanMessage) {
-        const paragraph = document.createElement('p');
-        paragraph.textContent = cleanMessage;
-        container.appendChild(paragraph);
+        // Split message by newlines and create paragraphs for each line
+        const lines = cleanMessage.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.trim() || i < lines.length - 1) {  // Display empty lines except last one
+            const paragraph = document.createElement('p');
+            paragraph.textContent = line;
+            container.appendChild(paragraph);
+          }
+        }
       }
     }
     
@@ -797,11 +842,34 @@ window.onload = function () {
         },
         body: JSON.stringify(messageBody),
       });
-  
+
       if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`API Error: ${response.status} ${response.statusText}`, errorText);
+        
+        // Create error message with retry button
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'error-message';
+        errorContainer.innerHTML = `
+          <div class="error-content">
+            <p>Error: ${response.status} ${response.statusText}</p>
+            <p class="error-details">${errorText}</p>
+            <button class="retry-btn">Retry</button>
+          </div>
+        `;
+        
+        // Add retry button handler
+        const retryBtn = errorContainer.querySelector('.retry-btn');
+        retryBtn.addEventListener('click', () => {
+          errorContainer.remove();
+          sendMessage(message, model, onSuccessCallback, isParallelRequest);
+        });
+        
+        // Add error message to chat
+        chatOutputElem.appendChild(errorContainer);
+        return; // Return early without sending the message
       }
-  
+
       const reader = response.body.getReader();
       currentReader = reader;
       const decoder = new TextDecoder("utf-8");
@@ -905,9 +973,13 @@ window.onload = function () {
   }
 
   async function getParallelResponses() {
-    // Get message from input field
-    const message = chatMessageElem.value.trim();
+    // Get message from contenteditable div with HTML
+    const message = chatMessageElem.innerHTML.trim();
     if (!message) return;
+    
+    // Process message to preserve line breaks
+    const processedMessage = message.replace(/<div><br><\/div>/g, '\n').replace(/<div>/g, '\n').replace(/<br>/g, '\n').replace(/<\/div>/g, '');
+    const textMessage = processedMessage.replace(/<[^>]*>/g, '');
     
     // Check if a chat is active, if not create a new one
     if (!currentChatId) {
@@ -935,11 +1007,12 @@ window.onload = function () {
     }
     
     // Add the user message to chat
-    generateUserChatBubble(message);
-    chatMessageElem.value = "";
+    generateUserChatBubble(textMessage);
+    chatMessageElem.innerHTML = "";
+    adjustInputHeight();
     
     // Save to chat history
-    chats[currentChatId].messages.push({ role: 'user', content: message.trim() });
+    chats[currentChatId].messages.push({ role: 'user', content: textMessage.trim() });
     chats[currentChatId].timestamp = new Date().toISOString();
     saveChatsToLocalStorage();
     updateChatHistoryList();
@@ -1006,10 +1079,10 @@ window.onload = function () {
       
       // Make two parallel API calls
       await Promise.all([
-        sendMessage(message, selectedModel, 
+        sendMessage(textMessage, selectedModel, 
           () => createParallelResponseElement(responseElem1), 
           true),
-        sendMessage(message, selectedModel, 
+        sendMessage(textMessage, selectedModel, 
           () => createParallelResponseElement(responseElem2), 
           true)
       ]);
@@ -1237,5 +1310,35 @@ window.onload = function () {
     };
     
     reader.readAsText(file);
+  }
+
+  // Function to adjust input height
+  function adjustInputHeight() {
+    // Get the input element
+    const input = document.getElementById('chatMessage');
+    
+    // Reset any inline height first
+    input.style.height = 'auto';
+    
+    // Set height based on scrollHeight, with min and max constraints
+    const newHeight = Math.min(Math.max(input.scrollHeight, 25), 150);
+    input.style.height = newHeight + 'px';
+    
+    // Also adjust the container height if needed
+    const wrapper = input.closest('.message-input-wrapper');
+    if (wrapper) {
+      wrapper.style.height = 'auto';
+    }
+  }
+
+  // Get message text from contenteditable div
+  function getMessageText() {
+    return chatMessageElem.innerText.trim();
+  }
+
+  // Clear message input
+  function clearMessageInput() {
+    chatMessageElem.innerHTML = '';
+    setTimeout(adjustInputHeight, 0);
   }
 };

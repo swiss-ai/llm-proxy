@@ -95,13 +95,13 @@
         // Load apertus.json if storage is empty or only had empty chats
         if (!savedChats || isEmpty) {
           // Server path (works with http server)
-          loadFile('/static/apertus.json');
+          loadFile('apertus.json');
           
           // Alternative file path (helps with local file access)
           setTimeout(function() {
             // If we still don't have chat history after trying the first path
             if (!localStorage.getItem('chatHistory')) {
-              loadFile('apertus.json');
+              loadFile('/apertus.json');
             }
           }, 100);
           
@@ -139,8 +139,9 @@
       });
     </script>
     <!-- TEMPLATES -->
-    <!-- <script defer src="keys.js"></script> -->
-    <script>const API_KEY = "{{ apiKey }}";</script>
+    <!-- i think this might work in both modes -->
+    <script>let API_KEY = "{{ apiKey }}";</script>
+    <script defer src="keys.js"></script>
     <script defer src="static/chat.js"></script>
   </head>
   <body>
@@ -206,7 +207,7 @@
               <i class="fas fa-random"></i>
             </button>
             <div class="message-input-wrapper">
-              <input id="chatMessage" class="input-field" type="text" placeholder="Enter message..." name="usrnm">
+              <div id="chatMessage" class="input-field" contenteditable="true" placeholder="Enter message..."></div>
               <button type="button" id="imageUploadBtn" class="image-upload-btn" title="Upload image">
                 <i class="fas fa-image"></i>
               </button>
