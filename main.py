@@ -188,18 +188,21 @@ async def health():
 
 @app.get("/login")
 async def login(request: Request):
+    redirect_path = request.query_params.get("next", "/api_key")
     callback_addr = f"{request.base_url}users/callbacks"
     return await oauth.auth0.authorize_redirect(
         request=request,
         redirect_uri=callback_addr,
+        state=redirect_path,  # Store the redirect path in the state
     )
 
 @app.get("/users/callbacks")
 async def callback(request: StarletteRequest):
     user = await oauth.auth0.authorize_access_token(request=request)
     request.session['user'] = user
-    print(request.url.path)
-    response = RedirectResponse(url="/api_key")
+    # Get the redirect path from the state parameter
+    redirect_path = request.query_params.get("state", "/api_key")
+    response = RedirectResponse(url=redirect_path)
     response.set_cookie("user", user['userinfo'])
     try:
         return response
@@ -264,8 +267,8 @@ async def chat(request: Request):
     api_key = request.cookies.get("rc_api_key")
     if not api_key:
         return RedirectResponse(url="/login?next=/chat")
-    available_models = get_all_models(endpoint=ENDPOINT)
-    return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key, "models": available_models})
+    # I fetch the models on the frontend anyway
+    return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key})
 
 @app.post("/stats")
 async def get_statistics(request: Request):
