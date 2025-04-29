@@ -26,120 +26,12 @@
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-jsx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-tsx.min.js"></script>
-    <script>
-      // Initialize LaTeX rendering as soon as the KaTeX library is loaded
-      document.addEventListener("DOMContentLoaded", function() {
-        if (typeof renderMathInElement === 'function') {
-          window.renderMathInElement = renderMathInElement;
-          
-          // Define the default options for LaTeX rendering
-          window.katexOptions = {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false},
-              {left: '\\(', right: '\\)', display: false},
-              {left: '\\[', right: '\\]', display: true}
-            ],
-            throwOnError: false,
-            output: 'html'
-          };
-          
-          // After chat loads, render any existing math
-          setTimeout(function() {
-            const chatOutput = document.getElementById('chatOutput');
-            if (chatOutput) {
-              window.renderMathInElement(chatOutput, window.katexOptions);
-              // Also highlight any code blocks
-              if (window.Prism) {
-                Prism.highlightAllUnder(chatOutput);
-              }
-            }
-          }, 500);
-        }
-      });
-    </script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="static/images/swiss-ai-logo-small.png">
     <link rel="stylesheet" href="static/chat.css">
-    <!-- TEMPLATES -->
-    <script>
-      // Load apertus.json if no chat history exists
-      document.addEventListener('DOMContentLoaded', function() {
-        // Check if localStorage is empty or only contains an empty chat
-        const savedChats = localStorage.getItem('chatHistory');
-        let isEmpty = true;
-        
-        if (savedChats) {
-          try {
-            const chats = JSON.parse(savedChats);
-            const chatIds = Object.keys(chats);
-            
-            // Check if there's any chat with messages
-            for (const id of chatIds) {
-              if (chats[id].messages && chats[id].messages.length > 0) {
-                isEmpty = false;
-                break;
-              }
-            }
-            
-            // If only empty chats exist, remove them
-            if (isEmpty && chatIds.length > 0) {
-              localStorage.removeItem('chatHistory');
-            }
-          } catch (e) {
-            console.error('Error parsing chat history:', e);
-            localStorage.removeItem('chatHistory');
-          }
-        }
-        
-        // Load apertus.json if storage is empty or only had empty chats
-        if (!savedChats || isEmpty) {
-          // Server path (works with http server)
-          loadFile('apertus.json');
-          
-          // Alternative file path (helps with local file access)
-          setTimeout(function() {
-            // If we still don't have chat history after trying the first path
-            if (!localStorage.getItem('chatHistory')) {
-              loadFile('/apertus.json');
-            }
-          }, 100);
-          
-          // Function to load JSON file from server
-          function loadFile(filePath) {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', filePath, true);
-            xhr.onload = function() {
-              if (xhr.status === 200) {
-                try {
-                  const data = JSON.parse(xhr.responseText);
-                  const chatId = 'chat_' + Date.now();
-                  const chat = {
-                    id: chatId,
-                    timestamp: new Date().toISOString(),
-                    dateCreated: data.dateCreated || new Date().toISOString(),
-                    modelName: data.modelName || "",
-                    messages: data.messages || []
-                  };
-                  const chats = { [chatId]: chat };
-                  localStorage.setItem('chatHistory', JSON.stringify(chats));
-                  // Reload page to show the loaded chat
-                  window.location.reload();
-                } catch (err) {
-                  console.error('Error processing JSON:', err);
-                }
-              }
-            };
-            xhr.onerror = function() {
-              console.error('Error loading JSON file:', filePath);
-            };
-            xhr.send();
-          }
-        }
-      });
-    </script>
-    <!-- TEMPLATES -->
-    <!-- i think this might work in both modes -->
+    <script defer src="apertus-init.js"></script>
+
     <script>let API_KEY = "{{ apiKey }}";</script>
     <script defer src="keys.js"></script>
     <script defer src="static/chat.js"></script>
@@ -186,26 +78,13 @@
               <i class="fas fa-download"></i>
             </button>
           </div>
-          <div class="model-selector">
-            <div class="custom-dropdown">
-              <select id="modelSelect"> 
-                <option value="">Loading models...</option>
-              </select>
-            </div>
-            <button id="refreshModelsBtn" class="refresh-models-btn" title="Refresh models list">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-          </div>
         </div>
         <div id="chatOutput" class="chat-history">
           <!-- Chat messages will appear here -->
         </div>
         <form id="chatForm" action="javascript:void(0)">
           <div class="input-container">
-            <!-- Incredible Ancient Technology Lost to Time -->
-            <button type="button" id="parallelBtn" class="parallel-btn" title="Get parallel responses">
-              <i class="fas fa-random"></i>
-            </button>
+            <div id="blockingBox"></div>
             <div class="message-input-wrapper">
               <div id="chatMessage" class="input-field" contenteditable="true" placeholder="Enter message..."></div>
               <button type="button" id="imageUploadBtn" class="image-upload-btn" title="Upload image">
