@@ -1,1 +1,89 @@
- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Swiss AI Initiative</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/images/swiss-ai-logo-small.png">
+    <script src="/static/config.js"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="javascript:window.location.href=getUrl('pages', 'home');">
+                <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+                <span>Swiss AI Initiative</span>
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'home');">Home</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'blog');">Blog</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'news');">News</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'about');" class="active">About</a></li>
+            </ul>
+            <a href="javascript:window.location.href=getUrl('pages', 'login')+'?next='+window.location.pathname;" class="login-btn">Login</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="content-section">
+            <div class="news-preview">
+                <h2>About Swiss AI Initiative LLM Proxy</h2>
+                
+                <div class="about-content">
+                    <h3>Our Team</h3>
+                    <p>The Swiss AI LLM Proxy is developed by:</p>
+                    <ul class="team-list">
+                        <li><strong>Ilia Badanin</strong> - Main Developer</li>
+                        <li><strong>Xiaozhe Yao</strong> - Contributor</li>
+                        <li><strong>Imanol Schlag</strong> - Contributor</li>
+                    </ul>
+
+                    <h3>Swiss AI Initiative</h3>
+                    <p>This project is part of the <a href="https://www.swiss-ai.org" target="_blank">Swiss AI Initiative</a>.</p>
+                    
+                    <p>The Swiss AI Initiative was started in December 2023 and seeded with an initial investment of over 10,000,000 GPU hours. ETH Zurich and EPFL have created in October 2024 the Swiss National AI Institute (SNAI) to provide a long-term and national perspective on AI-based research, education and innovation.</p>
+                    
+                    <p>SNAI accelerates the momentum of the Swiss AI Initiative and spearheads research on large-scale AI enabled by Alps. The initiative is further backed by 20 million CHF by ETH Domain, further compute commitments, and third party funding (industry partnerships, donations, etc).</p>
+                    
+                    <p>The Swiss AI Initiative is operated by SNAI and is the largest open science/open source effort for AI foundation models worldwide. By leveraging its integration with the ETH AI Center and the EPFL AI Center, the initiative benefits from the critical mass of both institutions as well as the expertise of a total of over 800 researchers (incl. 70 AI-focused professors) from over 10 academic institutions across Switzerland.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Swiss AI.</p>
+        </div>
+    </footer>
+
+    <style>
+        .about-content {
+            margin-top: 1.5rem;
+        }
+        
+        .about-content h3 {
+            color: #29b6f6;
+            margin: 1.5rem 0 0.5rem;
+        }
+        
+        .about-content p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .team-list {
+            list-style-type: disc;
+            padding-left: 2rem;
+            margin: 1rem 0;
+        }
+        
+        .team-list li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</body>
+</html> 

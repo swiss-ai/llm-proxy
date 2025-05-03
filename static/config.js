@@ -1,4 +1,5 @@
 const SITE_CONFIG = {
+  // Navigation pages
   pages: {
     home: "/",
     api_key: "/api_key",
@@ -8,6 +9,13 @@ const SITE_CONFIG = {
     blog: "/blog",
     usage: "/usage",
     about: "/about",
+  },
+  // External links
+  external: {
+    github: "https://github.com/swiss-ai/modelServing",
+    swiss_ai: "https://www.swiss-ai.org/",
+    eth: "https://ethz.ch/en.html",
+    epfl: "https://www.epfl.ch/en/"
   },
 };
 

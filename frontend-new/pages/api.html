@@ -3,52 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your API Key - Swiss AI</title>
+    <title>API - Swiss AI Initiative</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/images/swiss-ai-logo-small.png">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/static/config.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-content">
-                <a href="javascript:window.location.href=getUrl('pages', 'home');" class="site-logo">
-                    <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
-                    <h1>Swiss AI Initiative</h1>
-                </a>
-                <nav>
-                    <ul>
-                        <li><a href="javascript:window.location.href=getUrl('pages', 'home');">Home</a></li>
-                        <li><a href="javascript:window.location.href=getUrl('pages', 'chat');">Chat</a></li>
-                        <li><a href="javascript:window.location.href=getUrl('pages', 'api_key');" class="active">API Key</a></li>
-                        <li><a href="javascript:window.location.href=getUrl('pages', 'usage');">Usage</a></li>
-                        <li><a href="javascript:window.location.href=getUrl('pages', 'about');">About</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </header>
+    <header>
+        <div class="logo">
+            <a href="javascript:window.location.href=getUrl('pages', 'home');">
+                <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+                <span>Swiss AI Initiative</span>
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'home');">Home</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'blog');">Blog</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'news');">News</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'about');">About</a></li>
+            </ul>
+            <a href="javascript:window.location.href=getUrl('pages', 'login')+'?next='+window.location.pathname;" class="login-btn">Login</a>
+        </nav>
+    </header>
 
-        <main>
-            <div class="card">
-                <h2>Your Swiss AI Serving API Key</h2>
-                <p>Hi, {{ user.name}}!</p>
-                {% if api_key %}
-                    <div class="api-key-container">
-                        <div class="api-key">{{ api_key }}</div>
-                        <button class="btn" onclick="copyApiKey()">Copy</button>
-                    </div>
-                {% else %}
-                    <p>No API key found. Please log in to generate an API key.</p>
-                {% endif %}
-                <div class="alert alert-warning">
-                    <p>Warning! Please keep your API key secure and do not share it with others.</p>
-                </div>
+    <main>
+        <div class="api-key-container">
+            <h1>Your Swiss AI Serving API Key</h1>
+            <p>Hi, {{ user.name}}!</p>
+            {% if api_key %}
+                <p>Your API Key: <strong class="api-key">{{ api_key }}</strong></p>
+            {% else %}
+                <p>No API key found. Please log in to generate an API key.</p>
+            {% endif %}
+            <p class="warning">Warning! Please keep your API key secure and do not share it with others.</p>
 
-                <div class="code-sample">
-                    <h3>Code Sample</h3>
-                    <p>Here's a code sample to help you get started:</p>
-                    <pre><code>import openai
+            <div class="code-sample">
+                <h2>Code Samples</h2>
+                <p>Here are some code samples to help you get started:</p>
+                <pre><code>import openai
 
 client = openai.Client(api_key="{{api_key}}", base_url="https://fmapi.swissai.cscs.ch")
 res = client.chat.completions.create(
@@ -65,39 +59,49 @@ res = client.chat.completions.create(
 for chunk in res:
     if len(chunk.choices) > 0 and chunk.choices[0].delta.content:
         print(chunk.choices[0].delta.content, end="", flush=True)</code></pre>
-                </div>
-                
-                <div class="model-list">
-                    <h3>Available models:</h3>
-                    <ul>
-                    {% for model in models %}
-                        <li><code>{{ model }}</code></li>
-                    {% endfor %}
-                    </ul>
-                </div>
-
-                <p>For complete documentation, please visit our <a href="javascript:window.location.href=getUrl('external', 'github');" target="_blank">GitHub repository</a>.</p>
             </div>
-        </main>
-
-        <footer>
-            <p>&copy; 2024 Swiss AI Initiative. All rights reserved.</p>
-            <div class="logos">
-                <a href="javascript:window.location.href=getUrl('external', 'eth');" target="_blank"><img src="/static/images/eth_ai_center_logo.png" alt="ETH AI Center" height="30"></a>
-                <a href="javascript:window.location.href=getUrl('external', 'epfl');" target="_blank"><img src="/static/images/epfl_ai_center_black.png" alt="EPFL AI Center" height="30"></a>
+            
+            <div class="model-list">
+                <h3>Available models:</h3>
+                <ul>
+                {% for model in models %}
+                    <li><code>{{ model }}</code></li>
+                {% endfor %}
+                </ul>
             </div>
-        </footer>
-    </div>
+
+            <p>For complete documentation, please visit our <a href="javascript:window.location.href=getUrl('external', 'github');" target="_blank">GitHub repository</a>.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Swiss AI Initiative. All rights reserved.</p>
+        <div class="logos">
+            <a href="javascript:window.location.href=getUrl('external', 'eth');" target="_blank"><img src="/static/images/eth_ai_center_logo.png" alt="ETH AI Center" height="30"></a>
+            <a href="javascript:window.location.href=getUrl('external', 'epfl');" target="_blank"><img src="/static/images/epfl_ai_center_black.png" alt="EPFL AI Center" height="30"></a>
+        </div>
+    </footer>
+    
 
     <script>
-    function copyApiKey() {
-        const apiKey = document.querySelector('.api-key').textContent;
-        navigator.clipboard.writeText(apiKey).then(() => {
-            alert('API key copied to clipboard!');
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-        });
-    }
+    $(document).ready(function() {
+        // Check if user is logged in based on rc_api_key cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        const isLoggedIn = getCookie('rc_api_key') !== null;
+        
+        // Update login button visibility
+        if (isLoggedIn) {
+            $('.login-btn').text('Logout').addClass('logout-btn');
+        } else {
+            $('.login-btn').text('Login').removeClass('logout-btn');
+        }
+    });
     </script>
 </body>
 </html>

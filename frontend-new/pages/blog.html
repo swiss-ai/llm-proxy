@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog - Mock Website</title>
+    <title>Blog - Swiss AI Initiative</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/images/swiss-ai-logo-small.png">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/config.js"></script>
     <style>
         .blog-section {
             background-color: #1a1a1a;
@@ -162,17 +164,19 @@
 <body>
     <header>
         <div class="logo">
-            <img src="https://fmapi.swissai.cscs.ch/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
-            <span>Mock Website</span>
+            <a href="javascript:window.location.href=getUrl('pages', 'home');">
+                <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+                <span>Swiss AI Initiative</span>
+            </a>
         </div>
         <nav>
             <ul>
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="blog.html" class="active">Blog</a></li>
-                <li><a href="news.html">News</a></li>
-                <li><a href="about.html">About</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'home');">Home</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'blog');" class="active">Blog</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'news');">News</a></li>
+                <li><a href="javascript:window.location.href=getUrl('pages', 'about');">About</a></li>
             </ul>
-            <button id="login-toggle" class="login-btn">Login</button>
+            <a href="javascript:window.location.href=getUrl('pages', 'login')+'?next='+window.location.pathname;" class="login-btn">Login</a>
         </nav>
     </header>
 
@@ -243,49 +247,29 @@
 
     <footer>
         <div class="footer-content">
-            <p>&copy; 2023 Mock Website. All rights reserved.</p>
-            <div class="footer-links">
-                <a href="privacy.html">Privacy Policy</a>
-                <a href="terms.html">Terms of Service</a>
-                <a href="contact.html">Contact Us</a>
-            </div>
+            <p>&copy; 2025 Swiss AI.</p>
         </div>
     </footer>
 
     <script>
-        $(document).ready(function() {
-            // Check for stored auth state in localStorage
-            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-            updateLoginButton(isAuthenticated);
-            
-            // Login/Logout toggle
-            $('#login-toggle').on('click', function() {
-                const newAuthState = !isAuthenticated;
-                localStorage.setItem('isAuthenticated', newAuthState);
-                updateLoginButton(newAuthState);
-                location.reload(); // Refresh the page to apply auth state changes
-            });
-            
-            function updateLoginButton(isAuth) {
-                if (isAuth) {
-                    $('#login-toggle').text('Logout').addClass('logout-btn');
-                } else {
-                    $('#login-toggle').text('Login').removeClass('logout-btn');
-                }
-            }
-            
-            // Category filtering
-            $('#category-filter').on('change', function() {
-                const category = $(this).val();
-                
-                if (category === 'all') {
-                    $('.blog-entry').fadeIn(300);
-                } else {
-                    $('.blog-entry').hide();
-                    $(`.blog-entry[data-category="${category}"]`).fadeIn(300);
-                }
-            });
-        });
+    $(document).ready(function() {
+        // Check if user is logged in based on rc_api_key cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        const isLoggedIn = getCookie('rc_api_key') !== null;
+        
+        // Update login button visibility
+        if (isLoggedIn) {
+            $('.login-btn').text('Logout').addClass('logout-btn');
+        } else {
+            $('.login-btn').text('Login').removeClass('logout-btn');
+        }
+    });
     </script>
 </body>
 </html> 
