@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage Statistics - Mock Website</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .usage-section {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 2rem 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .stat-card {
+            background-color: #242424;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #29b6f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        .time-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .time-filter {
+            background-color: #242424;
+            border: 1px solid #333;
+            color: #e0e0e0;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .time-filter.active {
+            background-color: #29b6f6;
+            color: #121212;
+            border-color: #29b6f6;
+        }
+        
+        .auth-notice {
+            background-color: #242424;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            border-left: 4px solid #f44336;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .usage-section {
+                padding: 1rem;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://fmapi.swissai.cscs.ch/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Mock Website</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="news.html">News</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <button id="login-toggle" class="login-btn">Login</button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="usage-section">
+            <h1>Usage Statistics</h1>
+            
+            <div id="non-auth-view">
+                <div class="auth-notice">
+                    <p>Please log in to view your detailed usage statistics.</p>
+                </div>
+            </div>
+            
+            <div id="auth-view" class="auth-only">
+                <div class="time-filters">
+                    <button class="time-filter active" data-days="30">Last 30 Days</button>
+                    <button class="time-filter" data-days="90">Last 90 Days</button>
+                    <button class="time-filter" data-days="180">Last 180 Days</button>
+                    <button class="time-filter" data-days="365">Last Year</button>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="usageChart"></canvas>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">14,567</div>
+                        <div class="stat-label">Total API Calls</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">486</div>
+                        <div class="stat-label">Average Daily Calls</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">834</div>
+                        <div class="stat-label">Peak Usage (Calls)</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">99.98%</div>
+                        <div class="stat-label">API Availability</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2023 Mock Website. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="contact.html">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            // Check for stored auth state in localStorage
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+            updateAuthState(isAuthenticated);
+            
+            // Login/Logout toggle
+            $('#login-toggle').on('click', function() {
+                const newAuthState = !isAuthenticated;
+                localStorage.setItem('isAuthenticated', newAuthState);
+                location.reload(); // Refresh the page to apply auth state changes
+            });
+            
+            function updateAuthState(isAuth) {
+                if (isAuth) {
+                    $('#non-auth-view').hide();
+                    $('#auth-view').show();
+                    $('#login-toggle').text('Logout').addClass('logout-btn');
+                    initializeChart(30); // Initialize chart with 30 days data
+                } else {
+                    $('#non-auth-view').show();
+                    $('#auth-view').hide();
+                    $('#login-toggle').text('Login').removeClass('logout-btn');
+                }
+            }
+            
+            // Time filter functionality
+            $('.time-filter').on('click', function() {
+                $('.time-filter').removeClass('active');
+                $(this).addClass('active');
+                
+                const days = $(this).data('days');
+                updateChart(days);
+            });
+            
+            function generateRandomData(days) {
+                const data = [];
+                const baseValue = 300 + Math.random() * 200;
+                
+                for (let i = 0; i < days; i++) {
+                    // Generate a value with some randomness but with a realistic pattern
+                    // Weekend days (0 = Sunday, 6 = Saturday) have lower usage
+                    const date = new Date();
+                    date.setDate(date.getDate() - (days - i));
+                    const dayOfWeek = date.getDay();
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    
+                    // Base value with some randomness
+                    let value = baseValue + Math.sin(i / 5) * 100 + Math.random() * 150;
+                    
+                    // Reduce for weekends
+                    if (isWeekend) {
+                        value *= 0.6;
+                    }
+                    
+                    // Add a spike somewhere
+                    if (i === Math.floor(days / 2)) {
+                        value *= 1.5;
+                    }
+                    
+                    data.push(Math.floor(value));
+                }
+                
+                return data;
+            }
+            
+            function generateLabels(days) {
+                const labels = [];
+                for (let i = 0; i < days; i++) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - (days - i));
+                    labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                }
+                return labels;
+            }
+            
+            let usageChart = null;
+            
+            function initializeChart(days) {
+                const ctx = document.getElementById('usageChart').getContext('2d');
+                
+                usageChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: generateLabels(days),
+                        datasets: [{
+                            label: 'API Calls',
+                            data: generateRandomData(days),
+                            backgroundColor: 'rgba(41, 182, 246, 0.2)',
+                            borderColor: 'rgba(41, 182, 246, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(41, 182, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#aaa'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#aaa',
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#e0e0e0'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                                titleColor: '#fff',
+                                bodyColor: '#e0e0e0',
+                                borderColor: 'rgba(41, 182, 246, 0.5)',
+                                borderWidth: 1
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function updateChart(days) {
+                if (usageChart) {
+                    usageChart.data.labels = generateLabels(days);
+                    usageChart.data.datasets[0].data = generateRandomData(days);
+                    usageChart.update();
+                    
+                    // Also update stats
+                    updateStats(days);
+                }
+            }
+            
+            function updateStats(days) {
+                // Update total API calls based on selected time period
+                const totalCalls = Math.floor(days * 486 * (0.9 + Math.random() * 0.2));
+                $('.stat-card:nth-child(1) .stat-value').text(totalCalls.toLocaleString());
+                
+                // Update average daily calls (with some randomness)
+                const avgCalls = Math.floor(486 * (0.95 + Math.random() * 0.1));
+                $('.stat-card:nth-child(2) .stat-value').text(avgCalls.toLocaleString());
+                
+                // Update peak usage
+                const peakCalls = Math.floor(avgCalls * (1.5 + Math.random() * 0.3));
+                $('.stat-card:nth-child(3) .stat-value').text(peakCalls.toLocaleString());
+            }
+        });
+    </script>
+</body>
+</html> 

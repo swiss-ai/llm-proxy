@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found - Swiss AI</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" href="../static/images/swiss-ai-logo-small.png">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .error-container {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            text-align: center;
+            margin: 3rem auto;
+            max-width: 600px;
+        }
+        .error-container h1 {
+            color: #fff;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #29b6f6;
+            padding-bottom: 0.5rem;
+        }
+        .image-container {
+            margin: 2rem auto;
+        }
+        .image-container img {
+            max-width: 250px;
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(41, 182, 246, 0.3));
+            transition: filter 0.3s ease;
+        }
+        .image-container img:hover {
+            filter: drop-shadow(0 0 15px rgba(41, 182, 246, 0.5));
+        }
+        .message {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://fmapi.swissai.cscs.ch/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Swiss AI Development</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="news.html">News</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <button id="login-toggle" class="login-btn">Login</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="error-container">
+            <h1>404 - Page Not Found</h1>
+            <p>The page you are looking for does not exist or might have been removed.</p>
+            
+            <div class="image-container">
+                <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            </div>
+            
+            <p class="message">Let's get you back on track!</p>
+            <a href="/" class="btn">Return to Homepage</a>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 Swiss AI.</p>
+        </div>
+    </footer>
+
+    <script>
+    $(document).ready(function() {
+        // Check for stored auth state in localStorage
+        let isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+        
+        updateAuthState();
+        
+        // Login/Logout functionality
+        $('#login-toggle').on('click', function() {
+            isAuthenticated = !isAuthenticated;
+            localStorage.setItem('isAuthenticated', isAuthenticated);
+            updateAuthState();
+        });
+        
+        function updateAuthState() {
+            if (isAuthenticated) {
+                $('#login-toggle').text('Logout').addClass('logout-btn');
+            } else {
+                $('#login-toggle').text('Login').removeClass('logout-btn');
+            }
+        }
+    });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Website</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="static/images/swiss-ai-logo-small.png">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://fmapi.swissai.cscs.ch/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Swiss AI Development</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="pages/blog.html">Blog</a></li>
+                <li><a href="pages/news.html">News</a></li>
+                <li><a href="pages/about.html">About</a></li>
+            </ul>
+            <button id="login-toggle" class="login-btn">Login</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Non-Authorized View (Default) -->
+        <div id="non-auth-view">
+            <div class="top-buttons">
+                <a href="pages/usage.html" class="btn">Usage</a>
+                <a href="pages/api.html" class="btn">API</a>
+                <a href="pages/chat.html" class="btn">Chat</a>
+                <a href="pages/dashboard.html" class="btn">Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Authorized View (Hidden by default) -->
+        <div id="auth-view" class="auth-only">
+            <div class="top-buttons">
+                <a href="pages/chat.html" class="btn">Chat</a>
+                <a href="pages/api.html" class="btn">API</a>
+            </div>
+        </div>
+
+        <!-- Content Section (News and Blog previews) -->
+        <section class="content-section">
+            <div class="news-preview">
+                <h2>Latest News</h2>
+                <div class="news-items">
+                    <div class="news-item">
+                        <h3><a href="pages/news/news1.html">Important Announcement</a></h3>
+                        <p class="date">June 10, 2024</p>
+                    </div>
+                    
+                    <div class="news-item expandable">
+                        <h3>New Feature Released <span class="expand-indicator">[+]</span></h3>
+                        <p class="date">May 28, 2024</p>
+                        <p>We're excited to announce our latest feature that will enhance your experience. Click to learn more.</p>
+                        <div class="expanded-content">
+                            <p>Our new feature includes enhanced dashboard analytics, improved API response times, and new integration options with popular third-party services.</p>
+                            <p>Users on all plans will have immediate access to these improvements:</p>
+                            <ul>
+                                <li>Real-time data visualization</li>
+                                <li>Customizable widgets</li>
+                                <li>Enhanced performance metrics</li>
+                                <li>Advanced filtering options</li>
+                            </ul>
+                            <a href="pages/news/news2.html">Read the full announcement</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-item">
+                        <h3><a href="pages/news/news3.html">Maintenance Update</a></h3>
+                        <p class="date">May 15, 2024</p>
+                    </div>
+                </div>
+                <a href="pages/news.html" class="view-all">View all news</a>
+            </div>
+
+            <div class="blog-preview">
+                <h2>Latest Blog Posts</h2>
+                <div class="blog-items">
+                    <div class="blog-item">
+                        <h3><a href="pages/blog/post1.html">Getting Started with Our API</a></h3>
+                        <p class="date">June 5, 2024</p>
+                        <p class="excerpt">Learn how to integrate our API into your projects with this step-by-step guide.</p>
+                    </div>
+                    <div class="blog-item">
+                        <h3><a href="pages/blog/post2.html">Best Practices for Efficient Usage</a></h3>
+                        <p class="date">May 22, 2024</p>
+                        <p class="excerpt">Discover the most efficient ways to use our platform and maximize your productivity.</p>
+                    </div>
+                </div>
+                <a href="pages/blog.html" class="view-all">View all blog posts</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 Swiss AI.</p>
+        </div>
+    </footer>
+
+    <script>
+    $(document).ready(function() {
+        // Check for stored auth state in localStorage
+        let isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+        
+        updateAuthState();
+        
+        // Login/Logout functionality
+        $('#login-toggle').on('click', function() {
+            isAuthenticated = !isAuthenticated;
+            localStorage.setItem('isAuthenticated', isAuthenticated);
+            updateAuthState();
+        });
+        
+        function updateAuthState() {
+            if (isAuthenticated) {
+                $('#non-auth-view').hide();
+                $('#auth-view').show();
+                $('#login-toggle').text('Login').removeClass('logout-btn');
+            } else {
+                $('#non-auth-view').show();
+                $('#auth-view').hide();
+                $('#login-toggle').text('Logout').addClass('logout-btn');
+            }
+        }
+        
+        // Expandable news items
+        $('.expandable').on('click', function() {
+            const content = $(this).find('.expanded-content');
+            const indicator = $(this).find('.expand-indicator');
+            
+            content.slideToggle(300);
+            
+            if (indicator.text() === '[+]') {
+                indicator.text('[-]');
+            } else {
+                indicator.text('[+]');
+            }
+        });
+        
+        // Active nav link
+        const currentLocation = window.location.pathname;
+        $('nav ul li a').each(function() {
+            const linkPath = $(this).attr('href');
+            
+            // Check if the current path contains the link path
+            if (currentLocation.includes(linkPath) && linkPath !== 'index.html') {
+                $(this).addClass('active');
+            } else if (currentLocation.endsWith('/website/') || currentLocation.endsWith('/website/index.html')) {
+                // For home page
+                if (linkPath === 'index.html') {
+                    $(this).addClass('active');
+                }
+            }
+        });
+    });
+    </script>
+</body>
+</html> 

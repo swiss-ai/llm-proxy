@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - Mock Website</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .blog-section {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .blog-filters {
+            background-color: #242424;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        #category-filter {
+            background-color: #333;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            padding: 0.5rem;
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .blog-entry {
+            background-color: #242424;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-bottom: 1px solid #333;
+        }
+        
+        .blog-entry:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .blog-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .blog-entry h2 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .blog-entry h2 a {
+            color: #fff;
+            transition: color 0.3s ease;
+        }
+        
+        .blog-entry h2 a:hover {
+            color: #29b6f6;
+            text-decoration: none;
+        }
+        
+        .date {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+        
+        .author {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+        
+        .excerpt {
+            margin-top: 0.5rem;
+            color: #aaa;
+            font-size: 0.95rem;
+        }
+        
+        .read-more {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #29b6f6;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+        
+        .read-more:hover {
+            border-color: #29b6f6;
+            text-decoration: none;
+        }
+        
+        .blog-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        
+        .page-number, .next {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #242424;
+            color: #e0e0e0;
+            border-radius: 4px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .page-number:hover, .next:hover, .page-number.current {
+            background-color: #29b6f6;
+            color: #121212;
+            text-decoration: none;
+        }
+        
+        .view-all {
+            display: inline-block;
+            margin-top: 1rem;
+            font-weight: 500;
+            color: #29b6f6;
+            transition: transform 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            border: 1px solid #29b6f6;
+        }
+        
+        .view-all:hover {
+            background-color: rgba(41, 182, 246, 0.1);
+            text-decoration: none;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .blog-section {
+                padding: 1rem;
+            }
+            
+            .blog-filters {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .blog-entry h2 {
+                font-size: 1.3rem;
+            }
+            
+            .blog-pagination {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://fmapi.swissai.cscs.ch/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Mock Website</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="blog.html" class="active">Blog</a></li>
+                <li><a href="news.html">News</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <button id="login-toggle" class="login-btn">Login</button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="blog-section">
+            <h1>Blog Posts</h1>
+<!--             
+            <div class="blog-filters">
+                <label for="category-filter">Filter by category:</label>
+                <select id="category-filter">
+                    <option value="all">All Categories</option>
+                    <option value="api">API</option>
+                    <option value="tutorials">Tutorials</option>
+                    <option value="guides">Guides</option>
+                </select>
+            </div>
+            
+            <div class="blog-list">
+                <article class="blog-entry" data-category="api">
+                    <h2><a href="blog/post1.html">Getting Started with Our API</a></h2>
+                    <p class="date">June 5, 2023</p>
+                    <p class="author">by Mike Robinson</p>
+                    <p class="excerpt">Learn how to integrate our API into your projects with this step-by-step guide. This comprehensive tutorial will walk you through the basics of authentication, key endpoints, and best practices.</p>
+                    <a href="blog/post1.html" class="read-more">Read more →</a>
+                </article>
+                
+                <article class="blog-entry" data-category="guides">
+                    <h2><a href="blog/post2.html">Best Practices for Efficient Usage</a></h2>
+                    <p class="date">May 22, 2023</p>
+                    <p class="author">by Sarah Davis</p>
+                    <p class="excerpt">Discover the most efficient ways to use our platform and maximize your productivity. In this article, we cover resource optimization, caching strategies, and advanced configuration options.</p>
+                    <a href="blog/post2.html" class="read-more">Read more →</a>
+                </article>
+                
+                <article class="blog-entry" data-category="tutorials">
+                    <h2><a href="blog/post3.html">Creating Your First Project</a></h2>
+                    <p class="date">May 15, 2023</p>
+                    <p class="author">by John Smith</p>
+                    <p class="excerpt">A comprehensive tutorial on setting up your first project using our platform. Follow along as we build a sample application from scratch, demonstrating key features and integration points.</p>
+                    <a href="blog/post3.html" class="read-more">Read more →</a>
+                </article>
+                
+                <article class="blog-entry" data-category="api">
+                    <h2><a href="blog/post4.html">Advanced API Techniques</a></h2>
+                    <p class="date">May 8, 2023</p>
+                    <p class="author">by Mike Robinson</p>
+                    <p class="excerpt">Take your API usage to the next level with these advanced techniques and strategies. Learn about batching requests, implementing webhooks, and optimizing performance for high-volume applications.</p>
+                    <a href="blog/post4.html" class="read-more">Read more →</a>
+                </article>
+                
+                <article class="blog-entry" data-category="guides">
+                    <h2><a href="blog/post5.html">Optimizing Performance</a></h2>
+                    <p class="date">April 30, 2023</p>
+                    <p class="author">by Sarah Davis</p>
+                    <p class="excerpt">Learn how to optimize your projects for better performance and user experience. We cover front-end optimizations, database query improvements, and infrastructure configurations to make your application lightning fast.</p>
+                    <a href="blog/post5.html" class="read-more">Read more →</a>
+                </article>
+            </div>
+            
+            <div class="blog-pagination">
+                <span class="page-number current">1</span>
+                <a href="#" class="page-number">2</a>
+                <a href="#" class="page-number">3</a>
+                <a href="#" class="next">Next →</a>
+            </div> -->
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2023 Mock Website. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="contact.html">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            // Check for stored auth state in localStorage
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+            updateLoginButton(isAuthenticated);
+            
+            // Login/Logout toggle
+            $('#login-toggle').on('click', function() {
+                const newAuthState = !isAuthenticated;
+                localStorage.setItem('isAuthenticated', newAuthState);
+                updateLoginButton(newAuthState);
+                location.reload(); // Refresh the page to apply auth state changes
+            });
+            
+            function updateLoginButton(isAuth) {
+                if (isAuth) {
+                    $('#login-toggle').text('Logout').addClass('logout-btn');
+                } else {
+                    $('#login-toggle').text('Login').removeClass('logout-btn');
+                }
+            }
+            
+            // Category filtering
+            $('#category-filter').on('change', function() {
+                const category = $(this).val();
+                
+                if (category === 'all') {
+                    $('.blog-entry').fadeIn(300);
+                } else {
+                    $('.blog-entry').hide();
+                    $(`.blog-entry[data-category="${category}"]`).fadeIn(300);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started with Our API - Mock Website</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .blog-post {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .blog-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 1rem;
+        }
+        
+        .blog-meta {
+            color: #aaa;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .blog-content {
+            line-height: 1.8;
+        }
+        
+        .blog-content h2 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+        }
+        
+        .blog-content p {
+            margin-bottom: 1rem;
+        }
+        
+        .blog-content pre {
+            background-color: #242424;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-left: 3px solid #29b6f6;
+        }
+        
+        .blog-content code {
+            font-family: 'Courier New', Courier, monospace;
+            color: #e0e0e0;
+        }
+        
+        .blog-content ul, .blog-content ol {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .blog-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .blog-content strong {
+            color: #fff;
+        }
+        
+        .related-posts {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #333;
+        }
+        
+        .related-posts h3 {
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+        
+        .related-posts ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .related-posts li {
+            margin-bottom: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .related-posts li:hover {
+            transform: translateX(5px);
+        }
+        
+        .related-posts a {
+            color: #29b6f6;
+            transition: color 0.3s ease;
+        }
+        
+        .related-posts a:hover {
+            color: #4fc3f7;
+            text-decoration: none;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #29b6f6;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(-5px);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://fmapi.swissai.cscs.ch/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Mock Website</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../blog.html" class="active">Blog</a></li>
+                <li><a href="../news.html">News</a></li>
+                <li><a href="../about.html">About</a></li>
+            </ul>
+            <button id="login-toggle" class="login-btn">Login</button>
+        </nav>
+    </header>
+
+    <main>
+        <article class="blog-post">
+            <header class="blog-header">
+                <h1>Getting Started with Our API</h1>
+                <div class="blog-meta">
+                    <span class="date">Published: June 5, 2023</span> | 
+                    <span class="author">By Mike Robinson</span> | 
+                    <span class="category">Category: API</span>
+                </div>
+            </header>
+            
+            <div class="blog-content">
+                <p>Welcome to our guide on getting started with our API! This comprehensive tutorial will walk you through the basics of integrating our API into your projects, understanding the key endpoints, and best practices for implementation.</p>
+                
+                <h2>What is an API?</h2>
+                <p>An API (Application Programming Interface) allows different software applications to communicate with each other. Our API provides a set of endpoints that you can use to interact with our platform programmatically.</p>
+                
+                <h2>Authentication</h2>
+                <p>Before you can start using our API, you need to authenticate. We use API keys for authentication. You can generate an API key in your dashboard settings.</p>
+                
+                <p>Once you have your API key, you'll need to include it in the header of your requests:</p>
+                
+                <pre>
+// Example with JavaScript fetch
+fetch('https://api.mockwebsite.com/v1/endpoint', {
+    method: 'GET',
+    headers: {
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    }
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+                </pre>
+                
+                <h2>Basic Endpoints</h2>
+                <p>Our API provides several endpoints for different functionalities:</p>
+                
+                <ul>
+                    <li><strong>GET /api/v1/users</strong> - Get a list of users</li>
+                    <li><strong>GET /api/v1/users/{id}</strong> - Get a specific user</li>
+                    <li><strong>POST /api/v1/users</strong> - Create a new user</li>
+                    <li><strong>PUT /api/v1/users/{id}</strong> - Update a user</li>
+                    <li><strong>DELETE /api/v1/users/{id}</strong> - Delete a user</li>
+                </ul>
+                
+                <h2>Example: Creating a New User</h2>
+                <p>Here's an example of how to create a new user using our API:</p>
+                
+                <pre>
+// Example with JavaScript fetch
+fetch('https://api.mockwebsite.com/v1/users', {
+    method: 'POST',
+    headers: {
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        role: 'user'
+    })
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+                </pre>
+                
+                <h2>Rate Limiting</h2>
+                <p>To ensure fair usage of our API, we implement rate limiting. The current limits are:</p>
+                
+                <ul>
+                    <li>Basic plan: 100 requests per minute</li>
+                    <li>Premium plan: 500 requests per minute</li>
+                    <li>Enterprise plan: Custom limits based on your needs</li>
+                </ul>
+                
+                <h2>Error Handling</h2>
+                <p>Our API returns standard HTTP status codes along with a JSON response body that includes an error message and a unique error code for troubleshooting:</p>
+                
+                <pre>
+{
+    "error": {
+        "code": "invalid_auth",
+        "message": "Invalid authentication credentials",
+        "status": 401
+    }
+}
+                </pre>
+                
+                <h2>Conclusion</h2>
+                <p>This guide covers the basics of getting started with our API. For more detailed information about specific endpoints and advanced features, please refer to our <a href="../api.html">API Documentation</a>.</p>
+                
+                <p>If you have any questions or need assistance, don't hesitate to <a href="../contact.html">contact our support team</a>.</p>
+            </div>
+            
+            <div class="related-posts">
+                <h3>Related Posts</h3>
+                <ul>
+                    <li><a href="post4.html">Advanced API Techniques</a></li>
+                    <li><a href="post2.html">Best Practices for Efficient Usage</a></li>
+                    <li><a href="post3.html">Creating Your First Project</a></li>
+                </ul>
+            </div>
+            
+            <a href="../blog.html" class="back-link">← Back to Blog</a>
+        </article>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2023 Mock Website. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../terms.html">Terms of Service</a>
+                <a href="../contact.html">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            // Check for stored auth state in localStorage
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+            updateLoginButton(isAuthenticated);
+            
+            // Login/Logout toggle
+            $('#login-toggle').on('click', function() {
+                const newAuthState = !isAuthenticated;
+                localStorage.setItem('isAuthenticated', newAuthState);
+                updateLoginButton(newAuthState);
+                location.reload(); // Refresh the page to apply auth state changes
+            });
+            
+            function updateLoginButton(isAuth) {
+                if (isAuth) {
+                    $('#login-toggle').text('Logout').addClass('logout-btn');
+                } else {
+                    $('#login-toggle').text('Login').removeClass('logout-btn');
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

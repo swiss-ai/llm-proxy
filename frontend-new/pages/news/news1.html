@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Important Announcement - Mock Website</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .news-article {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .news-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 1rem;
+        }
+        
+        .news-date {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .news-content {
+            line-height: 1.8;
+        }
+        
+        .news-content h2 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+        }
+        
+        .news-content p {
+            margin-bottom: 1rem;
+        }
+        
+        .news-content strong {
+            color: #fff;
+        }
+        
+        .news-content ul, .news-content ol {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .news-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .news-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #29b6f6;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(-5px);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://fmapi.swissai.cscs.ch/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Mock Website</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../news.html" class="active">News</a></li>
+                <li><a href="../about.html">About</a></li>
+            </ul>
+            <button id="login-toggle" class="login-btn">Login</button>
+        </nav>
+    </header>
+
+    <main>
+        <article class="news-article">
+            <header class="news-header">
+                <h1>Important Announcement</h1>
+                <p class="news-date">June 10, 2023</p>
+            </header>
+            
+            <div class="news-content">
+                <p>We are excited to announce a significant milestone for our company. After months of hard work and dedication from our team, we are proud to share that we have reached <strong>1 million active users</strong> on our platform!</p>
+                
+                <p>This achievement would not have been possible without the support and feedback from our loyal users. We want to express our sincere gratitude to everyone who has been part of this journey.</p>
+                
+                <p>To celebrate this milestone, we are introducing the following changes and improvements:</p>
+                
+                <ul>
+                    <li><strong>Enhanced User Experience</strong>: We've redesigned our user interface to make it more intuitive and user-friendly.</li>
+                    <li><strong>New Features</strong>: We're rolling out several new features that have been highly requested by our community.</li>
+                    <li><strong>Special Promotion</strong>: For a limited time, all users will get a 20% discount on premium subscriptions.</li>
+                    <li><strong>Community Events</strong>: We'll be hosting a series of virtual events to connect with our users and gather more feedback.</li>
+                </ul>
+                
+                <p>These updates will be gradually rolled out over the next few weeks. We recommend keeping your application updated to access these new features as soon as they become available.</p>
+                
+                <h2>What's Next?</h2>
+                
+                <p>As we look to the future, we remain committed to improving our platform and providing the best experience for our users. Our roadmap for the coming months includes:</p>
+                
+                <ul>
+                    <li>Expanding our API capabilities</li>
+                    <li>Introducing mobile applications for iOS and Android</li>
+                    <li>Enhancing security measures</li>
+                    <li>Improving performance and reliability</li>
+                </ul>
+                
+                <p>We value your feedback and suggestions as we continue to evolve our platform. Please don't hesitate to share your thoughts through our <a href="../contact.html">feedback form</a>.</p>
+                
+                <p>Thank you once again for being part of our community!</p>
+                
+                <p>Sincerely,<br>The Mock Website Team</p>
+            </div>
+            
+            <a href="../news.html" class="back-link">← Back to News</a>
+        </article>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2023 Mock Website. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="../privacy.html">Privacy Policy</a>
+                <a href="../terms.html">Terms of Service</a>
+                <a href="../contact.html">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            // Check for stored auth state in localStorage
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+            updateLoginButton(isAuthenticated);
+            
+            // Login/Logout toggle
+            $('#login-toggle').on('click', function() {
+                const newAuthState = !isAuthenticated;
+                localStorage.setItem('isAuthenticated', newAuthState);
+                updateLoginButton(newAuthState);
+                location.reload(); // Refresh the page to apply auth state changes
+            });
+            
+            function updateLoginButton(isAuth) {
+                if (isAuth) {
+                    $('#login-toggle').text('Logout').addClass('logout-btn');
+                } else {
+                    $('#login-toggle').text('Login').removeClass('logout-btn');
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -27,12 +27,10 @@ master_key = os.getenv("RC_PROXY_MASTER_KEY", "sk-research-computer-master-key-x
 PG_HOST = os.environ.get("PG_HOST", "sqlite:///./test.db")
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="frontend-new")
 engine = create_engine(PG_HOST)
 
-frontend_templates = Jinja2Templates(directory="static/dist")
-app.mount("/_astro", StaticFiles(directory="static/dist/_astro"), name="frontpage")
-app.mount("/static", StaticFiles(directory="static"), name="frontpage")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 known_keys = set()
 oauth = OAuth()
@@ -235,7 +233,7 @@ async def get_api_key(request: Request):
         demo_model = available_models[0]
     else:
         demo_model = "[YOUR_MODEL_NAME]"
-    response = templates.TemplateResponse("api_key.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models, "demo_model": demo_model})
+    response = templates.TemplateResponse("pages/api.html", {"request": request, "api_key": user_key, "user": user_info, "models": available_models, "demo_model": demo_model})
     response.set_cookie("rc_api_key", user_key)
     return response
 
@@ -268,7 +266,7 @@ async def chat(request: Request):
     if not api_key:
         return RedirectResponse(url="/login?next=/chat")
     # I fetch the models on the frontend anyway
-    return templates.TemplateResponse("chat_gui.html", {"request": request, "apiKey": api_key})
+    return templates.TemplateResponse("pages/chat_gui.html", {"request": request, "apiKey": api_key})
 
 @app.post("/stats")
 async def get_statistics(request: Request):
@@ -328,11 +326,21 @@ def get_aggregated_metrics(request: Request):
 
 @app.get("/{rest_of_path:path}")
 async def homepage_app(req: Request, rest_of_path: str):
-    if rest_of_path.split("/")[0] in ['docs', 'articles', 'guides']:
-        return frontend_templates.TemplateResponse(rest_of_path+"/index.html", { 'request': req })
-    return frontend_templates.TemplateResponse('index.html', { 'request': req })
+    # First check for specific pages
+    if rest_of_path == "news":
+        return templates.TemplateResponse('pages/news.html', { 'request': req })
+    elif rest_of_path == "blog":
+        return templates.TemplateResponse('pages/blog.html', { 'request': req })
+    elif rest_of_path == "usage":
+        return templates.TemplateResponse('pages/usage.html', { 'request': req })
+        
+    # If path doesn't match any specific page, try index or fall back to 404
+    if not rest_of_path or rest_of_path == "index.html":
+        return frontend_templates.TemplateResponse('index.html', { 'request': req })
+    else:
+        return frontend_templates.TemplateResponse('pages/404.html', { 'request': req })
 
-app.mount("/", StaticFiles(directory="static/dist", html=True), name="static")
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

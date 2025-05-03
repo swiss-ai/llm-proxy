@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News - Mock Website</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .news-section {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .news-item {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #333;
+        }
+        
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        
+        .news-item.expandable {
+            cursor: pointer;
+        }
+        
+        .news-item h2 {
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+        
+        .news-date {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .expanded-content {
+            display: none;
+            padding-top: 1rem;
+            margin-top: 1rem;
+            border-top: 1px dashed #333;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .expand-indicator {
+            display: inline-block;
+            margin-left: 0.5rem;
+            font-size: 0.8rem;
+            color: #29b6f6;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .news-section {
+                padding: 1rem;
+            }
+            
+            .news-item h2 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://fmapi.swissai.cscs.ch/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Mock Website</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="news.html" class="active">News</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <button id="login-toggle" class="login-btn">Login</button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="news-section">
+            <h1>Latest News</h1>
+            
+            <!-- One-line title with link to separate page -->
+            <!-- <div class="news-item">
+                <h2><a href="news/news1.html">Important Announcement</a></h2>
+                <p class="news-date">June 10, 2023</p>
+            </div>
+            
+            <div class="news-item expandable">
+                <h2>New Feature Released <span class="expand-indicator">[+]</span></h2>
+                <p class="news-date">May 28, 2023</p>
+                <p>We're excited to announce our latest feature that will enhance your experience with our platform. Click to learn more.</p>
+                <div class="expanded-content">
+                    <p>This update brings improved performance, new customization options, and better user experience.</p>
+                    <p>The new feature includes:</p>
+                    <ul>
+                        <li>Enhanced dashboard with real-time analytics</li>
+                        <li>Customizable widgets for personalized experience</li>
+                        <li>Improved API response times</li>
+                        <li>New integration options with popular third-party services</li>
+                    </ul>
+                    <p>For more details and documentation, <a href="news/news2.html">read the full announcement</a>.</p>
+                </div>
+            </div>
+            
+            <div class="news-item">
+                <h2><a href="news/news3.html">Maintenance Update</a></h2>
+                <p class="news-date">May 15, 2023</p>
+            </div>
+            
+            <div class="news-item expandable">
+                <h2>Version 2.0 Coming Soon <span class="expand-indicator">[+]</span></h2>
+                <p class="news-date">May 5, 2023</p>
+                <p>We're thrilled to announce that Version 2.0 of our platform will be released next month. Click to see what's coming.</p>
+                <div class="expanded-content">
+                    <p>This major update includes a complete redesign of the user interface, enhanced performance, and several new features.</p>
+                    <p>Some highlights of Version 2.0 include:</p>
+                    <ul>
+                        <li>Completely redesigned dashboard</li>
+                        <li>Dark mode support</li>
+                        <li>Advanced reporting capabilities</li>
+                        <li>New API endpoints for expanded functionality</li>
+                        <li>Improved security features</li>
+                    </ul>
+                    <p>Stay tuned for more information and a detailed changelog in the coming weeks. <a href="news/news4.html">Learn more about Version 2.0</a>.</p>
+                </div>
+            </div>
+            
+            <div class="news-item">
+                <h2><a href="news/news5.html">Community Forum Launch</a></h2>
+                <p class="news-date">April 22, 2023</p>
+            </div>
+            
+            <div class="news-item">
+                <h2><a href="news/news6.html">API Documentation Updates</a></h2>
+                <p class="news-date">April 15, 2023</p>
+            </div>
+            
+            <div class="news-item expandable">
+                <h2>Q1 2023 Performance Report <span class="expand-indicator">[+]</span></h2>
+                <p class="news-date">April 10, 2023</p>
+                <p>We're pleased to share our Q1 2023 performance report with key achievements and metrics. Click to expand.</p>
+                <div class="expanded-content">
+                    <p>During this quarter, we achieved significant improvements in system reliability, response times, and user satisfaction.</p>
+                    <p>Key highlights:</p>
+                    <ul>
+                        <li>99.99% uptime across all services</li>
+                        <li>Average API response time reduced by 42%</li>
+                        <li>User base grown by 27% compared to Q4 2022</li>
+                        <li>Customer satisfaction score increased to 4.8/5</li>
+                    </ul>
+                    <p>We continue to focus on improving our services and providing the best experience for our users. <a href="news/news7.html">View the full report</a>.</p>
+                </div>
+            </div> -->
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2023 Mock Website. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="contact.html">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            // Check for stored auth state in localStorage
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+            updateLoginButton(isAuthenticated);
+            
+            // Login/Logout toggle
+            $('#login-toggle').on('click', function() {
+                const newAuthState = !isAuthenticated;
+                localStorage.setItem('isAuthenticated', newAuthState);
+                updateLoginButton(newAuthState);
+                location.reload(); // Refresh the page to apply auth state changes
+            });
+            
+            function updateLoginButton(isAuth) {
+                if (isAuth) {
+                    $('#login-toggle').text('Logout').addClass('logout-btn');
+                } else {
+                    $('#login-toggle').text('Login').removeClass('logout-btn');
+                }
+            }
+            
+            // Expandable news items
+            $('.expandable').on('click', function() {
+                const content = $(this).find('.expanded-content');
+                const indicator = $(this).find('.expand-indicator');
+                
+                content.slideToggle(300);
+                
+                if (indicator.text() === '[+]') {
+                    indicator.text('[-]');
+                } else {
+                    indicator.text('[+]');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
