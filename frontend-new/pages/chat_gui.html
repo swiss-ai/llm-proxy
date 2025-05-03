@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Swiss AI LLM Chat</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- KaTeX for LaTeX rendering -->
     <link
@@ -48,98 +50,126 @@
     <script defer src="static/chat.js"></script>
   </head>
   <body>
-    <div id="appContainer">
-      <div id="chatSidebar" onclick="event.stopPropagation();">
-        <div class="sidebar-header">
-          <div class="history-title">
-            <h2>History</h2>
-            <div
-              id="historyTooltip"
-              class="info-icon"
-              title="Images are not saved. All history of chats is stored locally in the browser."
-            >
-              <i class="fas fa-info-circle"></i>
-            </div>
-          </div>
-          <button
-            id="clearHistoryBtn"
-            class="clear-history-btn"
-            title="Clear all history"
-          >
-            <i class="fas fa-trash"></i>
-          </button>
+    <div class="container">
+      <header>
+        <div class="header-content">
+          <a href="javascript:window.location.href=getUrl('pages', 'home');" class="site-logo">
+            <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <h1>Swiss AI Initiative</h1>
+          </a>
+          <nav>
+            <ul>
+              <li><a href="javascript:window.location.href=getUrl('pages', 'home');">Home</a></li>
+              <li><a href="javascript:window.location.href=getUrl('pages', 'chat');" class="active">Chat</a></li>
+              <li><a href="javascript:window.location.href=getUrl('pages', 'api_key');">API Key</a></li>
+              <li><a href="javascript:window.location.href=getUrl('pages', 'usage');">Usage</a></li>
+              <li><a href="javascript:window.location.href=getUrl('pages', 'about');">About</a></li>
+            </ul>
+          </nav>
         </div>
-        <div class="new-chat-container">
-          <button id="newChatBtn" class="new-chat-btn">
-            <i class="fas fa-plus"></i> <span>New Chat</span>
-          </button>
-          <button id="importChatBtn" class="import-btn" title="Import chat">
-            <i class="fas fa-file-import"></i>
-          </button>
-          <input type="file" id="importChatInput" accept=".json" />
-        </div>
-        <div id="chatHistoryList">
-          <!-- Chat history entries will appear here -->
-        </div>
-      </div>
-      <div id="chatMain">
-        <div id="header" class="responsive-header">
-          <!-- OFFLINETEST -->
-          <!-- <h1>Swiss AI LLM Chat <span>(Offline Test Mode)</span></h1>  -->
-          <!-- OFFLINETEST -->
-          <button
-            id="hamburgerMenu"
-            class="hamburger-menu"
-            onclick="event.stopPropagation(); document.getElementById('chatSidebar').classList.toggle('show');"
-          >
-            <i class="fas fa-bars"></i>
-          </button>
-          <div class="header-left">
-            <h1>Swiss AI LLM Chat</h1>
-            <button
-              id="exportChatBtn"
-              class="export-btn"
-              title="Export current chat"
-            >
-              <i class="fas fa-download"></i>
-            </button>
-          </div>
-        </div>
-        <div id="chatOutput" class="chat-history">
-          <!-- Chat messages will appear here -->
-        </div>
-        <form id="chatForm" action="javascript:void(0)">
-          <div id="input-container">
-            <div id="blockingBox"></div>
-            <div class="message-input-wrapper">
+      </header>
+    
+      <div id="appContainer">
+        <div id="chatSidebar" onclick="event.stopPropagation();">
+          <div class="sidebar-header">
+            <div class="history-title">
+              <h2>History</h2>
               <div
-                id="chatMessage"
-                class="input-field"
-                contenteditable="true"
-                placeholder="Enter message..."
-              ></div>
-              <button
-                type="button"
-                id="imageUploadBtn"
-                class="image-upload-btn"
-                title="Upload image"
+                id="historyTooltip"
+                class="info-icon"
+                title="Images are not saved. All history of chats is stored locally in the browser."
               >
-                <i class="fas fa-image"></i>
-              </button>
-              <input
-                type="file"
-                id="imageFileInput"
-                accept="image/*"
-                multiple
-                style="display: none"
-              />
+                <i class="fas fa-info-circle"></i>
+              </div>
             </div>
-            <button type="submit" id="sendBtn" class="btn">
-              <i class="fas fa-arrow-right"></i>
+            <button
+              id="clearHistoryBtn"
+              class="clear-history-btn"
+              title="Clear all history"
+            >
+              <i class="fas fa-trash"></i>
             </button>
           </div>
-        </form>
+          <div class="new-chat-container">
+            <button id="newChatBtn" class="new-chat-btn">
+              <i class="fas fa-plus"></i> <span>New Chat</span>
+            </button>
+            <button id="importChatBtn" class="import-btn" title="Import chat">
+              <i class="fas fa-file-import"></i>
+            </button>
+            <input type="file" id="importChatInput" accept=".json" />
+          </div>
+          <div id="chatHistoryList">
+            <!-- Chat history entries will appear here -->
+          </div>
+        </div>
+        <div id="chatMain">
+          <div id="header" class="responsive-header">
+            <!-- OFFLINETEST -->
+            <!-- <h1>Swiss AI LLM Chat <span>(Offline Test Mode)</span></h1>  -->
+            <!-- OFFLINETEST -->
+            <button
+              id="hamburgerMenu"
+              class="hamburger-menu"
+              onclick="event.stopPropagation(); document.getElementById('chatSidebar').classList.toggle('show');"
+            >
+              <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-left">
+              <h1>Swiss AI LLM Chat</h1>
+              <button
+                id="exportChatBtn"
+                class="export-btn"
+                title="Export current chat"
+              >
+                <i class="fas fa-download"></i>
+              </button>
+            </div>
+          </div>
+          <div id="chatOutput" class="chat-history">
+            <!-- Chat messages will appear here -->
+          </div>
+          <form id="chatForm" action="javascript:void(0)">
+            <div id="input-container">
+              <div id="blockingBox"></div>
+              <div class="message-input-wrapper">
+                <div
+                  id="chatMessage"
+                  class="input-field"
+                  contenteditable="true"
+                  placeholder="Enter message..."
+                ></div>
+                <button
+                  type="button"
+                  id="imageUploadBtn"
+                  class="image-upload-btn"
+                  title="Upload image"
+                >
+                  <i class="fas fa-image"></i>
+                </button>
+                <input
+                  type="file"
+                  id="imageFileInput"
+                  accept="image/*"
+                  multiple
+                  style="display: none"
+                />
+              </div>
+              <button type="submit" id="sendBtn" class="btn">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
+      
+      <footer>
+        <p>&copy; 2024 Swiss AI Initiative. All rights reserved.</p>
+        <div class="logos">
+          <a href="javascript:window.location.href=getUrl('external', 'eth');" target="_blank"><img src="/static/images/eth_ai_center_logo.png" alt="ETH AI Center" height="30"></a>
+          <a href="javascript:window.location.href=getUrl('external', 'epfl');" target="_blank"><img src="/static/images/epfl_ai_center_black.png" alt="EPFL AI Center" height="30"></a>
+        </div>
+      </footer>
     </div>
   </body>
 </html>

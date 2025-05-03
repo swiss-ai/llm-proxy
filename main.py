@@ -333,12 +333,21 @@ async def homepage_app(req: Request, rest_of_path: str):
         return templates.TemplateResponse('pages/blog.html', { 'request': req })
     elif rest_of_path == "usage":
         return templates.TemplateResponse('pages/usage.html', { 'request': req })
-        
+    elif rest_of_path == "about":
+        return templates.TemplateResponse('pages/about.html', { 'request': req })
+    
+    # Then check documentation paths
+    # if rest_of_path.split("/")[0] in ['docs', 'articles', 'guides']:
+    #     try:
+    #         return templates.TemplateResponse(rest_of_path+"/index.html", { 'request': req })
+    #     except:
+    #         return templates.TemplateResponse('pages/404.html', { 'request': req })
+    
     # If path doesn't match any specific page, try index or fall back to 404
     if not rest_of_path or rest_of_path == "index.html":
-        return frontend_templates.TemplateResponse('index.html', { 'request': req })
-    else:
-        return frontend_templates.TemplateResponse('pages/404.html', { 'request': req })
+        return templates.TemplateResponse('index.html', { 'request': req })
+    
+    return templates.TemplateResponse('pages/404.html', { 'request': req })
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
