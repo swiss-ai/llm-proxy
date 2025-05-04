@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found</title>
+    <title>Login Error</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/images/swiss-ai-logo-small.png">
     <script src="/static/config.js"></script>
@@ -20,7 +20,7 @@
         .error-container h1 {
             color: #fff;
             margin-bottom: 1.5rem;
-            border-bottom: 2px solid #29b6f6;
+            border-bottom: 2px solid #e53935;
             padding-bottom: 0.5rem;
         }
         .image-container {
@@ -29,15 +29,24 @@
         .image-container img {
             max-width: 250px;
             height: auto;
-            filter: drop-shadow(0 0 10px rgba(41, 182, 246, 0.3));
+            filter: drop-shadow(0 0 10px rgba(229, 57, 53, 0.3));
             transition: filter 0.3s ease;
         }
         .image-container img:hover {
-            filter: drop-shadow(0 0 15px rgba(41, 182, 246, 0.5));
+            filter: drop-shadow(0 0 15px rgba(229, 57, 53, 0.5));
         }
         .message {
             font-size: 1.2rem;
             margin-bottom: 2rem;
+        }
+        .error-details {
+            background-color: #2a2a2a;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1.5rem 0;
+            color: #e0e0e0;
+            text-align: left;
+            word-wrap: break-word;
         }
     </style>
 </head>
@@ -60,15 +69,23 @@
 
     <main>
         <div class="error-container">
-            <h1>404 - Page Not Found</h1>
-            <p>The page you are looking for does not exist or might have been removed.</p>
+            <h1>Authentication Error</h1>
+            <p>There was a problem during the authentication process.</p>
             
             <div class="image-container">
                 <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
             </div>
             
-            <p class="message">Let's get you back on track!</p>
-            <a href="javascript:window.location.href=getUrl('pages', 'home');" class="btn">Return to Homepage</a>
+            <p class="message">Error: {{ error }}</p>
+            
+            {% if message %}
+            <div class="error-details">
+                <p>Details: {{ message }}</p>
+            </div>
+            {% endif %}
+            
+            <a href="javascript:window.location.href=getUrl('pages', 'login')+'?next={{ next }}';" class="btn">Try Again</a>
+            <a href="javascript:window.location.href=getUrl('pages', 'home');" class="btn btn-secondary">Return to Homepage</a>
         </div>
     </main>
 

@@ -6,17 +6,14 @@
     <title>Swiss AI Initiative LLM Proxy</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/images/swiss-ai-logo-small.png">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/static/config.js"></script>
 </head>
 <body>
     <header>
-        <div class="logo">
-            <a href="javascript:window.location.href=getUrl('pages', 'home');">
-                <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
-                <span>Swiss AI Initiative</span>
-            </a>
-        </div>
+        <a class="logo" href="javascript:window.location.href=getUrl('pages', 'home');">
+            <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Swiss AI Initiative</span>
+        </a>
         <nav>
             <ul>
                 <li><a href="javascript:window.location.href=getUrl('pages', 'home');" class="active">Home</a></li>
@@ -29,25 +26,13 @@
     </header>
 
     <main>
-        <!-- Non-Authorized View (Default) -->
-        <div id="non-auth-view">
-            <div class="top-buttons">
-                <a href="javascript:window.location.href=getUrl('pages', 'usage');" class="btn">Usage</a>
-                <a href="javascript:window.location.href=getUrl('pages', 'api_key');" class="btn">API</a>
-                <a href="javascript:window.location.href=getUrl('pages', 'chat');" class="btn">Chat</a>
-                <a href="javascript:window.location.href=getUrl('pages', 'usage');" class="btn">Dashboard</a>
-            </div>
+        <div class="top-buttons">
+            <a href="javascript:window.location.href=getUrl('pages', 'api_key');" class="btn">API</a>
+            <a href="javascript:window.location.href=getUrl('pages', 'chat');" class="btn">Chat</a>
+            <!-- <a href="javascript:window.location.href=getUrl('pages', 'usage');" class="btn">Usage</a>
+            <a href="javascript:window.location.href=getUrl('pages', 'dashboard');" class="btn">Dashboard</a> -->
         </div>
-
-        <!-- Authorized View (Hidden by default) -->
-        <div id="auth-view" class="auth-only">
-            <div class="top-buttons">
-                <a href="javascript:window.location.href=getUrl('pages', 'chat');" class="btn">Chat</a>
-                <a href="javascript:window.location.href=getUrl('pages', 'api_key');" class="btn">API</a>
-            </div>
-        </div>
-
-        <!-- Content Section (News and Blog previews) -->
+        
         <section class="content-section">
             <div class="news-preview">
                 <h2>Latest News</h2>
@@ -106,47 +91,5 @@
             <p>&copy; 2025 Swiss AI.</p>
         </div>
     </footer>
-
-    <script>
-    $(document).ready(function() {
-        // Check for stored auth state in localStorage
-        let isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-        
-        updateAuthState();
-        
-        // Login/Logout functionality
-        $('.login-btn').on('click', function() {
-            isAuthenticated = !isAuthenticated;
-            localStorage.setItem('isAuthenticated', isAuthenticated);
-            updateAuthState();
-        });
-        
-        function updateAuthState() {
-            if (isAuthenticated) {
-                $('#non-auth-view').hide();
-                $('#auth-view').show();
-                $('.login-btn').text('Logout').addClass('logout-btn');
-            } else {
-                $('#non-auth-view').show();
-                $('#auth-view').hide();
-                $('.login-btn').text('Login').removeClass('logout-btn');
-            }
-        }
-        
-        // Expandable news items
-        $('.expandable').on('click', function() {
-            const content = $(this).find('.expanded-content');
-            const indicator = $(this).find('.expand-indicator');
-            
-            content.slideToggle(300);
-            
-            if (indicator.text() === '[+]') {
-                indicator.text('[-]');
-            } else {
-                indicator.text('[+]');
-            }
-        });
-    });
-    </script>
 </body>
 </html> 

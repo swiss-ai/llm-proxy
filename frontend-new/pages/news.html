@@ -6,7 +6,6 @@
     <title>News - Swiss AI Initiative</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/images/swiss-ai-logo-small.png">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/static/config.js"></script>
     <style>
         .news-section {
@@ -28,10 +27,6 @@
             border-bottom: none;
         }
         
-        .news-item.expandable {
-            cursor: pointer;
-        }
-        
         .news-item h2 {
             margin-bottom: 0.5rem;
             color: #fff;
@@ -41,21 +36,6 @@
             color: #aaa;
             font-size: 0.9rem;
             margin-bottom: 0.5rem;
-        }
-        
-        .expanded-content {
-            display: none;
-            padding-top: 1rem;
-            margin-top: 1rem;
-            border-top: 1px dashed #333;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        .expand-indicator {
-            display: inline-block;
-            margin-left: 0.5rem;
-            font-size: 0.8rem;
-            color: #29b6f6;
         }
         
         /* Responsive adjustments */
@@ -72,12 +52,10 @@
 </head>
 <body>
     <header>
-        <div class="logo">
-            <a href="javascript:window.location.href=getUrl('pages', 'home');">
-                <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
-                <span>Swiss AI Initiative</span>
-            </a>
-        </div>
+        <a class="logo" href="javascript:window.location.href=getUrl('pages', 'home');">
+            <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Swiss AI Initiative</span>
+        </a>
         <nav>
             <ul>
                 <li><a href="javascript:window.location.href=getUrl('pages', 'home');">Home</a></li>
@@ -170,48 +148,8 @@
 
     <footer>
         <div class="footer-content">
-            <p>&copy; 2023 Mock Website. All rights reserved.</p>
-            <div class="footer-links">
-                <a href="privacy.html">Privacy Policy</a>
-                <a href="terms.html">Terms of Service</a>
-                <a href="contact.html">Contact Us</a>
-            </div>
+            <p>&copy; 2025 Swiss AI.</p>
         </div>
     </footer>
-
-    <script>
-        $(document).ready(function() {
-            // Check if user is logged in based on rc_api_key cookie
-            function getCookie(name) {
-                const value = `; ${document.cookie}`;
-                const parts = value.split(`; ${name}=`);
-                if (parts.length === 2) return parts.pop().split(';').shift();
-                return null;
-            }
-            
-            const isLoggedIn = getCookie('rc_api_key') !== null;
-            
-            // Update login button visibility
-            if (isLoggedIn) {
-                $('.login-btn').text('Logout').addClass('logout-btn');
-            } else {
-                $('.login-btn').text('Login').removeClass('logout-btn');
-            }
-            
-            // Expandable news items
-            $('.expandable').on('click', function() {
-                const content = $(this).find('.expanded-content');
-                const indicator = $(this).find('.expand-indicator');
-                
-                content.slideToggle(300);
-                
-                if (indicator.text() === '[+]') {
-                    indicator.text('[-]');
-                } else {
-                    indicator.text('[+]');
-                }
-            });
-        });
-    </script>
 </body>
 </html> 

@@ -3,7 +3,7 @@ import json
 import time
 import uuid
 import requests
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote, unquote
 from sqlmodel import create_engine, Session, select
 from fastapi import FastAPI, Request, status, HTTPException, Depends
 from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse, JSONResponse
@@ -187,25 +187,37 @@ async def health():
 @app.get("/login")
 async def login(request: Request):
     redirect_path = request.query_params.get("next", "/api_key")
+    encoded_redirect = quote(redirect_path)
     callback_addr = f"{request.base_url}users/callbacks"
     return await oauth.auth0.authorize_redirect(
         request=request,
         redirect_uri=callback_addr,
-        state=redirect_path,  # Store the redirect path in the state
+        state=encoded_redirect,
     )
 
 @app.get("/users/callbacks")
 async def callback(request: StarletteRequest):
-    user = await oauth.auth0.authorize_access_token(request=request)
-    request.session['user'] = user
-    # Get the redirect path from the state parameter
-    redirect_path = request.query_params.get("state", "/api_key")
-    response = RedirectResponse(url=redirect_path)
-    response.set_cookie("user", user['userinfo'])
     try:
+        # Get the user info from Auth0
+        user = await oauth.auth0.authorize_access_token(request=request)
+        request.session['user'] = user
+        
+        # Get and decode the redirect path from the state parameter
+        encoded_redirect = request.query_params.get("state", "")
+        redirect_path = unquote(encoded_redirect) if encoded_redirect else "/api_key"
+        
+        # Create response with proper redirection
+        response = RedirectResponse(url=redirect_path)
+        
+        # Store user info in cookie, ensuring proper JSON formatting
+        user_info_json = json.dumps(user.get('userinfo', {}))
+        response.set_cookie("user", user['userinfo'])
+        
         return response
     except Exception as e:
-        return {"error": "error"}
+        print(f"Auth callback error: {str(e)}")
+        # Redirect to login page with error parameter in case of failure
+        return RedirectResponse(url=f"/login?error=auth_failed&message={quote(str(e))}")
 
 @app.get("/api_key", response_class=HTMLResponse)
 async def get_api_key(request: Request):
@@ -264,8 +276,9 @@ def get_aggregated_metrics(request: Request):
 async def chat(request: Request):
     api_key = request.cookies.get("rc_api_key")
     if not api_key:
-        return RedirectResponse(url="/login?next=/chat")
-    # I fetch the models on the frontend anyway
+        return RedirectResponse(url=f"/login?next=/chat")
+    
+    # Render the chat template with the API key
     return templates.TemplateResponse("pages/chat_gui.html", {"request": request, "apiKey": api_key})
 
 @app.post("/stats")
@@ -335,6 +348,18 @@ async def homepage_app(req: Request, rest_of_path: str):
         return templates.TemplateResponse('pages/usage.html', { 'request': req })
     elif rest_of_path == "about":
         return templates.TemplateResponse('pages/about.html', { 'request': req })
+    
+    # Check for login with error parameters
+    # elif rest_of_path == "login" and req.query_params.get("error"):
+    #     error = req.query_params.get("error")
+    #     message = req.query_params.get("message", "Unknown error")
+    #     next_url = req.query_params.get("next", "/")
+    #     return templates.TemplateResponse('pages/login_error.html', { 
+    #         'request': req,
+    #         'error': error,
+    #         'message': message,
+    #         'next': next_url
+    #     })
     
     # Then check documentation paths
     # if rest_of_path.split("/")[0] in ['docs', 'articles', 'guides']:

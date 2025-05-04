@@ -6,17 +6,56 @@
     <title>API - Swiss AI Initiative</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/images/swiss-ai-logo-small.png">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/static/config.js"></script>
+    <style>
+        .api-key-container {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .api-key {
+            font-size: 18px;
+            padding: 10px;
+            background-color: #252525;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #29b6f6;
+        }
+        .warning {
+            color: #f44336;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        pre {
+            background-color: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            color: #e0e0e0;
+            border: 1px solid #333;
+        }
+        code {
+            font-family: Consolas, monospace;
+        }
+        .code-sample {
+            margin-top: 2rem;
+        }
+        .model-list {
+            margin-top: 1.5rem;
+        }
+        .model-list li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <div class="logo">
-            <a href="javascript:window.location.href=getUrl('pages', 'home');">
-                <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
-                <span>Swiss AI Initiative</span>
-            </a>
-        </div>
+        <a class="logo" href="javascript:window.location.href=getUrl('pages', 'home');">
+            <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Swiss AI Initiative</span>
+        </a>
         <nav>
             <ul>
                 <li><a href="javascript:window.location.href=getUrl('pages', 'home');">Home</a></li>
@@ -75,33 +114,9 @@ for chunk in res:
     </main>
 
     <footer>
-        <p>&copy; 2024 Swiss AI Initiative. All rights reserved.</p>
-        <div class="logos">
-            <a href="javascript:window.location.href=getUrl('external', 'eth');" target="_blank"><img src="/static/images/eth_ai_center_logo.png" alt="ETH AI Center" height="30"></a>
-            <a href="javascript:window.location.href=getUrl('external', 'epfl');" target="_blank"><img src="/static/images/epfl_ai_center_black.png" alt="EPFL AI Center" height="30"></a>
+        <div class="footer-content">
+            <p>&copy; 2025 Swiss AI.</p>
         </div>
     </footer>
-    
-
-    <script>
-    $(document).ready(function() {
-        // Check if user is logged in based on rc_api_key cookie
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-            return null;
-        }
-        
-        const isLoggedIn = getCookie('rc_api_key') !== null;
-        
-        // Update login button visibility
-        if (isLoggedIn) {
-            $('.login-btn').text('Logout').addClass('logout-btn');
-        } else {
-            $('.login-btn').text('Login').removeClass('logout-btn');
-        }
-    });
-    </script>
 </body>
 </html>

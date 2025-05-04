@@ -2,13 +2,14 @@ const SITE_CONFIG = {
   // Navigation pages
   pages: {
     home: "/",
+    login: "/login",
     api_key: "/api_key",
     chat: "/chat",
-    login: "/login",
     news: "/news",
     blog: "/blog",
-    usage: "/usage",
     about: "/about",
+    usage: "/usage",
+    dashboard: "/dashboard",
   },
   // External links
   external: {

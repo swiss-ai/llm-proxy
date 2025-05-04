@@ -6,7 +6,7 @@
     <title>Usage - Swiss AI Initiative</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/images/swiss-ai-logo-small.png">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .usage-section {
@@ -102,16 +102,13 @@
             }
         }
     </style>
-    <script src="/static/config.js"></script>
 </head>
 <body>
     <header>
-        <div class="logo">
-            <a href="javascript:window.location.href=getUrl('pages', 'home');">
-                <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
-                <span>Swiss AI Initiative</span>
-            </a>
-        </div>
+        <a class="logo" href="javascript:window.location.href=getUrl('pages', 'home');">
+            <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+            <span>Swiss AI Initiative</span>
+        </a>
         <nav>
             <ul>
                 <li><a href="javascript:window.location.href=getUrl('pages', 'home');">Home</a></li>
@@ -175,30 +172,5 @@
             <p>&copy; 2025 Swiss AI.</p>
         </div>
     </footer>
-
-    <script>
-    $(document).ready(function() {
-        // Check if user is logged in based on rc_api_key cookie
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-            return null;
-        }
-        
-        const isLoggedIn = getCookie('rc_api_key') !== null;
-        
-        // Update login button visibility
-        if (isLoggedIn) {
-            $('.login-btn').text('Logout').addClass('logout-btn');
-            $('#usage-stats').show();
-            $('#login-required').hide();
-        } else {
-            $('.login-btn').text('Login').removeClass('logout-btn');
-            $('#usage-stats').hide();
-            $('#login-required').show();
-        }
-    });
-    </script>
 </body>
 </html> 
