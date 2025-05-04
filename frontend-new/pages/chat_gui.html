@@ -39,6 +39,7 @@
     />
     <link rel="icon" href="static/images/swiss-ai-logo-small.png" />
     <link rel="stylesheet" href="static/chat.css" />
+    <link rel="stylesheet" href="static/style.css" />
     <script defer src="apertus-init.js"></script>
 
     <script>
@@ -46,6 +47,7 @@
     </script>
     <script defer src="keys.js"></script>
     <script defer src="static/chat.js"></script>
+    <script src="/static/config.js"></script>
   </head>
   <body>
     <div id="appContainer">
@@ -95,7 +97,10 @@
             <i class="fas fa-bars"></i>
           </button>
           <div class="header-left">
-            <h1>Swiss AI LLM Chat</h1>
+            <a class="logo" href="javascript:window.location.href=getUrl('pages', 'home');">
+              <img src="/static/images/swiss-ai-logo-small.png" alt="Swiss AI Logo">
+              <span style="color: black;">Swiss AI Chat</span>
+            </a>
             <button
               id="exportChatBtn"
               class="export-btn"

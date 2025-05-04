@@ -22,25 +22,18 @@ const modelManager = {
         return response.json();
       })
       .then((data) => {
-        if (data.data && data.data.length > 0) {
-          this.availableModels = data.data.map((model) => model.id);
+        this.availableModels = data.data.map((model) => model.id);
 
-          // Update center model select if it exists
-          this.updateCenterModelUI();
+        // Update center model select if it exists
+        this.updateCenterModelUI();
 
-          // Pass models to callback if provided
-          if (typeof callback === "function") {
-            callback(this.availableModels);
-          }
-        } else {
-          alert("No models available.");
-          disableInputWithMessage(
-            "No models available. Please try again later.",
-          );
+        // Pass models to callback if provided
+        if (typeof callback === "function") {
+          callback(this.availableModels);
         }
+        // callback(this.availableModels);
       })
       .catch((error) => {
-        alert("Error fetching models from the API.");
         console.error(error);
         disableInputWithMessage(
           "Error fetching models. Please try again later.",
@@ -85,6 +78,7 @@ const chatOutputElem = document.getElementById("chatOutput");
 const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 const chatHistoryListElem = document.getElementById("chatHistoryList");
 const appContainer = document.getElementById("appContainer");
+const blockingBox = document.getElementById("blockingBox");
 
 // State variables
 let chats = {}; // All chat conversations stored by ID
@@ -408,86 +402,34 @@ function handleFiles(files) {
   }
 }
 
-function fetchModels() {
-  fetch(`${BASE_URL}/models`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(
-          `Error fetching models: ${response.status} ${response.statusText}`,
-        );
-      }
-      return response.json();
-    })
-    .then((data) => {
-      if (data.data && data.data.length > 0) {
-        const models = data.data.map((model) => model.id);
-
-        // Update center model select if it exists
-        const centerModelSelect = document.getElementById("centerModelSelect");
-        if (centerModelSelect) {
-          const previousCenterValue = centerModelSelect.value;
-          centerModelSelect.innerHTML = models
-            .map((model) => `<option value="${model}">${model}</option>`)
-            .join("");
-
-          // Restore previous selection if possible
-          if (previousCenterValue && models.includes(previousCenterValue)) {
-            centerModelSelect.value = previousCenterValue;
-          }
-        }
-      } else {
-        alert("No models available.");
-        disableInputWithMessage("No models available. Please try again later.");
-      }
-    })
-    .catch((error) => {
-      alert("Error fetching models from the API.");
-      console.error(error);
-      disableInputWithMessage("Error fetching models. Please try again later.");
-    });
-}
-
 // Function to disable input with a message
-// can be improved!
 function disableInputWithMessage(message) {
   const inputContainer = document.querySelector("#input-container");
-
+  
   // Add disabled class to container
   inputContainer.classList.add("disabled");
-
-  // Set message text
+  
+  // Set message in the blocking box
+  blockingBox.textContent = message;
+  blockingBox.style.display = "flex";
+  
+  // Disable contenteditable
   chatMessageElem.setAttribute("contenteditable", "false");
-  chatMessageElem.innerHTML = message;
-
-  // Add overlay to block interaction (replaces individual disabling)
-  const overlay = document.createElement("div");
-  overlay.className = "input-overlay";
-  overlay.style.cssText =
-    "position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; z-index: 10; cursor: not-allowed;";
-  inputContainer.appendChild(overlay);
 }
 
 // Function to enable input
-// can be improved!
 function enableInput() {
   const inputContainer = document.querySelector("#input-container");
+  
   // Remove disabled class
   inputContainer.classList.remove("disabled");
-
-  // Enable input
+  
+  // Hide the blocking box
+  blockingBox.style.display = "none";
+  
+  // Enable contenteditable and clear input
   chatMessageElem.setAttribute("contenteditable", "true");
   chatMessageElem.innerHTML = "";
-
-  // Remove overlay
-  const overlay = inputContainer.querySelector(".input-overlay");
-  if (overlay) {
-    overlay.remove();
-  }
 }
 
 function loadChatHistory() {

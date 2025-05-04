@@ -1032,6 +1032,12 @@ label {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.05);
   z-index: 10;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 20px;
+  color: #666;
+  font-size: 14px;
 }
 
 #chatMessage {

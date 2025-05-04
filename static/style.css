@@ -76,30 +76,20 @@ nav ul li a:hover, nav ul li a.active {
 }
 
 /* Login Button */
-.login-btn {
+.emph-btn {
     background-color: #29b6f6;
     color: #121212;
     padding: 0.5rem 1.2rem;
     border-radius: 10px;
-    font-weight: 500;
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-left: 1.5rem;
+    
 }
 
-.login-btn:hover {
-    background-color: #4fc3f7;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.logout-btn {
-    background-color: #f44336;
-    color: white;
-}
-
-.logout-btn:hover {
-    background-color: #e57373;
+.emph-btn:hover {
+    color: #121212;
+    box-shadow: 0 0 10px #29b6f6;
 }
 
 /* Main Content */
@@ -142,7 +132,6 @@ main {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    margin-top: 2rem;
 }
 
 .news-preview, .blog-preview {
