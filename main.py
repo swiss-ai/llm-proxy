@@ -186,9 +186,12 @@ async def health():
 
 @app.get("/login")
 async def login(request: Request):
+    # Get the redirect path and encode it to ensure it's properly preserved
     redirect_path = request.query_params.get("next", "/api_key")
     encoded_redirect = quote(redirect_path)
     callback_addr = f"{request.base_url}users/callbacks"
+    
+    # Use the encoded redirect path as state
     return await oauth.auth0.authorize_redirect(
         request=request,
         redirect_uri=callback_addr,
@@ -276,7 +279,7 @@ def get_aggregated_metrics(request: Request):
 async def chat(request: Request):
     api_key = request.cookies.get("rc_api_key")
     if not api_key:
-        return RedirectResponse(url=f"/login?next=/chat")
+        return RedirectResponse(url="/login?next=/chat")
     
     # Render the chat template with the API key
     return templates.TemplateResponse("pages/chat_gui.html", {"request": request, "apiKey": api_key})
